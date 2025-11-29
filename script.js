@@ -107,14 +107,11 @@ async function fetchDiscordPresence() {
           // No activity - show status message based on discord_status
           if (discord_status === 'offline') {
             activityEl.innerHTML = '<span class="offline-message">Offline</span>';
-          } else if (discord_status === 'online') {
-            // Para status online, mostrar apenas "Online"
-            activityEl.innerHTML = '<span class="status-online">Online</span>';
           } else {
-            // Para outros status (idle, dnd), mostrar "Online (Status)"
+            // Usar a classe correspondente ao status
             const statusClass = `status-${discord_status}`;
             const statusText = discord_status.charAt(0).toUpperCase() + discord_status.slice(1); // Capitalizar
-            activityEl.innerHTML = `<span class="${statusClass}">Online (${statusText})</span>`;
+            activityEl.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
           }
         }
       }
@@ -825,12 +822,11 @@ function renderWorks(filter = '') {
       videoContent = `
         <div class="streamable-embed">
           <iframe
-            src="https://streamable.com/e/${streamableId}?loop=0&autoplay=0&muted=0&dark=1&ui=0"
+            src="https://streamable.com/e/${streamableId}?loop=0"
             frameborder="0"
             scrolling="no"
             allowfullscreen
-            style="width:100%;height:100%;background:#000;border:none;"
-            loading="lazy"
+            style="width:100%;height:100%;"
           ></iframe>
         </div>
       `;

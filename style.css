@@ -343,8 +343,8 @@ h1 {
 
 .online-message {
   font-size: 0.85rem;
-  color: #53F09D;
-  font-weight: 500;
+  color: #53F09D; /* Mesma cor do círculo de status online */
+  font-weight: 600;
 }
 
 h2 {

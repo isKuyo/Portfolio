@@ -657,7 +657,7 @@ p {
   overflow: hidden;
 }
 
-.drive-wrapper {
+.video-wrapper {
   position: relative;
   width: 100%;
   padding-bottom: 56.25%;
@@ -666,7 +666,7 @@ p {
   border-radius: 12px;
 }
 
-.drive-wrapper iframe {
+.video-wrapper video {
   position: absolute;
   top: 0;
   left: 0;
@@ -674,6 +674,189 @@ p {
   height: 100%;
   border: none;
   border-radius: 12px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Controles de vídeo */
+.video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-wrapper:hover .video-controls,
+.video-wrapper.playing .video-controls {
+  opacity: 1;
+}
+
+.video-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.video-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.video-progress {
+  flex: 1;
+  height: 8px;
+  position: relative;
+  cursor: pointer;
+}
+
+.video-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  margin: 0;
+}
+
+.video-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.video-progress-filled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: #53F09D;
+  border-radius: 4px;
+}
+
+.video-time {
+  font-size: 0.8rem;
+  color: white;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Controles de volume */
+.volume-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.volume-slider-container {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 6px;
+  padding: 12px 8px;
+  margin-bottom: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.volume-wrapper:hover .volume-slider-container {
+  opacity: 1;
+  visibility: visible;
+}
+
+.volume-slider {
+  width: 4px;
+  height: 80px;
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Ícones de play/pause */
+.video-playpause .icon-pause {
+  display: none;
+}
+
+.video-wrapper.playing .video-playpause .icon-play {
+  display: none;
+}
+
+.video-wrapper.playing .video-playpause .icon-pause {
+  display: block;
+}
+
+/* Ícones de volume */
+.video-volume .icon-volume-off {
+  display: none;
+}
+
+.video-wrapper.muted .video-volume .icon-volume-on {
+  display: none;
+}
+
+.video-wrapper.muted .video-volume .icon-volume-off {
+  display: block;
+}
+
+/* Ícones de fullscreen */
+.video-fullscreen .icon-compress {
+  display: none;
+}
+
+.video-wrapper.fullscreen .video-fullscreen .icon-expand {
+  display: none;
+}
+
+.video-wrapper.fullscreen .video-fullscreen .icon-compress {
+  display: block;
 }
 
 /* Removemos as bordas adicionais para mostrar os controles do player */

@@ -835,6 +835,8 @@ function renderWorks(filter = '') {
             ></iframe>
           </div>
           <div class="video-overlay"></div>
+          <div class="side-border left"></div>
+          <div class="side-border right"></div>
         </div>
       `;
     } else if (work.video) {

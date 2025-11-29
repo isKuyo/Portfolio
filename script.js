@@ -792,7 +792,7 @@ function renderWorks(filter = '') {
   if (!worksList) return;
   const term = filter.toLowerCase();
   if (!worksCache.length) {
-    worksList.innerHTML = '<p class="works-modal__info">No works found yet. Add MP4s into assets/works/roblox.</p>';
+    worksList.innerHTML = '<p class="works-modal__info">No works found yet.</p>';
     return;
   }
   const fragment = document.createDocumentFragment();
@@ -810,12 +810,26 @@ function renderWorks(filter = '') {
     const tags = work.tags || [];
     const card = document.createElement('article');
     card.className = 'works-card';
-    card.innerHTML = `
-      <header>
-        <h3>${work.name}</h3>
-        ${tags.length ? `<div class="works-card__tags">${tags.map((tag) => `<span class="works-tag">${tag}</span>`).join('')}</div>` : ''}
-      </header>
-      <div class="works-card__media">
+    
+    // Processar URL do Streamable
+    let videoContent = '';
+    if (work.video && work.video.includes('streamable.com')) {
+      // Extrair o ID do Streamable da URL
+      const streamableId = work.video.split('/').pop();
+      videoContent = `
+        <div class="streamable-embed">
+          <iframe
+            src="https://streamable.com/e/${streamableId}?loop=0"
+            frameborder="0"
+            scrolling="no"
+            allowfullscreen
+            style="width:100%;height:100%;"
+          ></iframe>
+        </div>
+      `;
+    } else if (work.video) {
+      // Fallback para vídeo normal se não for do Streamable
+      videoContent = `
         <video src="${work.video}" preload="metadata" playsinline></video>
         <div class="video-controls">
           <button class="video-btn video-playpause" aria-label="Play/Pause">
@@ -832,6 +846,16 @@ function renderWorks(filter = '') {
             <svg class="icon-compress" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
           </button>
         </div>
+      `;
+    }
+    
+    card.innerHTML = `
+      <header>
+        <h3>${work.name}</h3>
+        ${tags.length ? `<div class="works-card__tags">${tags.map((tag) => `<span class="works-tag">${tag}</span>`).join('')}</div>` : ''}
+      </header>
+      <div class="works-card__media">
+        ${videoContent}
       </div>
     `;
     fragment.appendChild(card);

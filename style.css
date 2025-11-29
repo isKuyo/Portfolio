@@ -657,7 +657,7 @@ p {
   overflow: hidden;
 }
 
-.streamable-wrapper {
+.drive-wrapper {
   position: relative;
   width: 100%;
   padding-bottom: 56.25%;
@@ -666,27 +666,14 @@ p {
   border-radius: 12px;
 }
 
-.streamable-inner {
+.drive-wrapper iframe {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  border: none;
   border-radius: 12px;
-}
-
-/* Overlay para esconder as bordas brancas - apenas nas bordas */
-.video-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-  pointer-events: none;
-  border-radius: 12px;
-  box-shadow: inset 0 0 0 1px #000;
 }
 
 /* Removemos as bordas adicionais para mostrar os controles do player */

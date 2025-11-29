@@ -124,10 +124,37 @@ async function fetchDiscordPresence() {
   }
 }
 fetchDiscordPresence();
-// Refresh presence every 30 seconds
-setInterval(fetchDiscordPresence, 30000);
+// Disclaimer Modal
+const disclaimerModal = document.getElementById('disclaimerModal');
+const proceedBtn = document.getElementById('proceedBtn');
+const countdownEl = document.getElementById('countdown');
 
-// Update elapsed time every second
+let countdown = 5;
+const countdownInterval = setInterval(() => {
+  countdown--;
+  if (countdownEl) countdownEl.textContent = countdown;
+  
+  if (countdown <= 0) {
+    clearInterval(countdownInterval);
+    if (proceedBtn) {
+      proceedBtn.disabled = false;
+      proceedBtn.textContent = 'Prosseguir';
+    }
+  }
+}, 1000);
+
+proceedBtn?.addEventListener('click', () => {
+  if (disclaimerModal) {
+    disclaimerModal.style.opacity = '0';
+    setTimeout(() => {
+      disclaimerModal.style.display = 'none';
+    }, 500);
+  }
+});
+
+// Fetch Discord presence on load
+fetchDiscordPresence();
+setInterval(fetchDiscordPresence, 30000); // Update every 30 seconds time every second
 let currentActivityStartTime = null;
 function updateElapsedTime() {
   if (!currentActivityStartTime) return;

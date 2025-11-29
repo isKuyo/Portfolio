@@ -831,6 +831,8 @@ function renderWorks(filter = '') {
             allowfullscreen
             allow="autoplay; fullscreen"
           ></iframe>
+          <div class="side-overlay-left"></div>
+          <div class="side-overlay-right"></div>
         </div>
       `;
     } else if (work.video) {

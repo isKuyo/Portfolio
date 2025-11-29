@@ -657,22 +657,6 @@ p {
   overflow: hidden;
 }
 
-.streamable-embed {
-  position: relative;
-  width: 100%;
-  padding-bottom: 56.25%; /* Proporção 16:9 */
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.streamable-embed iframe {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 130%;
-  height: 500%;
-  transform: translate(-50%, -50%);
-}
 
 
 .works-card__media video {

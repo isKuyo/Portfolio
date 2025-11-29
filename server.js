@@ -142,6 +142,7 @@ let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos em milissegundos
 const CACHE_DIR = path.join(__dirname, 'cache');
 const GAMES_CACHE_FILE = path.join(CACHE_DIR, 'games.json');
+const VISITOR_COUNT_FILE = path.join(CACHE_DIR, 'visitor-count.json');
 try { fs.mkdirSync(CACHE_DIR, { recursive: true }); } catch {}
 
 function loadGamesCacheFromDisk() {
@@ -323,6 +324,56 @@ app.get("/api/games", async (req, res) => {
     
     res.status(502).json({ error: "Roblox não respondeu no momento" });
   }
+});
+
+// Visitor counter endpoint
+app.post("/api/visitor-count", (req, res) => {
+  let visitorCount = 0;
+  
+  // Try to read existing count from file
+  try {
+    if (fs.existsSync(VISITOR_COUNT_FILE)) {
+      const data = fs.readFileSync(VISITOR_COUNT_FILE, 'utf8');
+      const json = JSON.parse(data);
+      visitorCount = parseInt(json.count || 0);
+    }
+  } catch (error) {
+    console.error('Error reading visitor count:', error);
+  }
+  
+  // Increment count if client sends a new count that's higher
+  const clientCount = parseInt(req.body.count || 0);
+  if (clientCount > visitorCount) {
+    visitorCount = clientCount;
+  } else {
+    visitorCount++; // Increment server count
+  }
+  
+  // Save updated count
+  try {
+    fs.writeFileSync(VISITOR_COUNT_FILE, JSON.stringify({ count: visitorCount, updated: Date.now() }));
+  } catch (error) {
+    console.error('Error saving visitor count:', error);
+  }
+  
+  res.json({ count: visitorCount });
+});
+
+app.get("/api/visitor-count", (req, res) => {
+  let visitorCount = 0;
+  
+  // Try to read existing count from file
+  try {
+    if (fs.existsSync(VISITOR_COUNT_FILE)) {
+      const data = fs.readFileSync(VISITOR_COUNT_FILE, 'utf8');
+      const json = JSON.parse(data);
+      visitorCount = parseInt(json.count || 0);
+    }
+  } catch (error) {
+    console.error('Error reading visitor count:', error);
+  }
+  
+  res.json({ count: visitorCount });
 });
 
 app.get("/api/audio/info", async (req, res) => {

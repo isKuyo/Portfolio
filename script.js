@@ -29,7 +29,7 @@ async function fetchDiscordPresence() {
         // Update presence classes
         const titleRowEl = document.querySelector('.hero__title-row');
         if (presenceEl) {
-          presenceEl.classList.remove('has-activity', 'offline-only');
+          presenceEl.classList.remove('has-activity', 'offline-only', 'online-only');
           if (activity) {
             presenceEl.classList.add('has-activity');
             titleRowEl?.classList.add('has-activity');
@@ -37,6 +37,8 @@ async function fetchDiscordPresence() {
             titleRowEl?.classList.remove('has-activity');
             if (discord_status === 'offline') {
               presenceEl.classList.add('offline-only');
+            } else if (discord_status !== 'offline') {
+              presenceEl.classList.add('online-only');
             }
           }
         }
@@ -102,11 +104,11 @@ async function fetchDiscordPresence() {
           `;
         } else {
           currentActivityStartTime = null;
-          // No activity - show offline message if offline, otherwise empty
+          // No activity - show offline message if offline, otherwise show Online
           if (discord_status === 'offline') {
             activityEl.innerHTML = '<span class="offline-message">Offline</span>';
           } else {
-            activityEl.innerHTML = '';
+            activityEl.innerHTML = '<span class="online-message">Online</span>';
           }
         }
       }

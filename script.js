@@ -827,11 +827,11 @@ function renderWorks(filter = '') {
         <div class="streamable-wrapper">
           <div class="streamable-inner">
             <iframe 
-              src="https://streamable.com/e/${streamableId}?hd=1" 
+              src="https://streamable.com/e/${streamableId}?hd=1&dark=1" 
               frameborder="0" 
               allowfullscreen
               allow="autoplay; fullscreen"
-              style="width: 140%; height: 140%; position: absolute; left: -20%; top: -20%; overflow: hidden; border: none;"
+              style="width: 150%; height: 150%; position: absolute; left: -25%; top: -25%; overflow: hidden; border: none;"
             ></iframe>
           </div>
           <div class="video-overlay"></div>

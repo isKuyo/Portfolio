@@ -822,17 +822,16 @@ function renderWorks(filter = '') {
     if (work.video && work.video.includes('streamable.com')) {
       // Extrair o ID do Streamable da URL
       const streamableId = work.video.split('/').pop();
+      // Usar vídeo nativo com fonte do Streamable
       videoContent = `
-        <div class="streamable-embed">
-          <iframe 
-            allow="fullscreen" 
-            allowfullscreen 
-            width="1280"
-            height="720"
-            src="https://streamable.com/e/${streamableId}?loop=0" 
-            style="border:none;"
-          ></iframe>
-        </div>
+        <video 
+          controls 
+          playsinline 
+          preload="metadata"
+          poster="https://cdn-cf-east.streamable.com/image/${streamableId}.jpg"
+        >
+          <source src="https://cdn-cf-east.streamable.com/video/mp4/${streamableId}.mp4" type="video/mp4">
+        </video>
       `;
     } else if (work.video) {
       // Fallback para vídeo normal se não for do Streamable

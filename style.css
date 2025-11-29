@@ -663,16 +663,6 @@ p {
   padding-bottom: 56.25%; /* Proporção 16:9 */
   border-radius: 12px;
   overflow: hidden;
-  background: #000;
-}
-
-.streamable-embed iframe {
-  position: absolute;
-  top: -3%;
-  left: -1%;
-  width: 102%;
-  height: 106%;
-  border: none !important;
 }
 
 

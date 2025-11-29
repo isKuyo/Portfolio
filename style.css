@@ -681,21 +681,14 @@ p {
 .streamable-container {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%;
   overflow: hidden;
   background: #000;
   border-radius: 12px;
 }
 
-.streamable-container iframe {
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  width: calc(100% + 4px);
-  height: calc(100% + 4px);
-  border: none;
-  transform: scale(1.05);
-  transform-origin: center center;
+.streamable-container > div {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 /* Controles de vídeo */

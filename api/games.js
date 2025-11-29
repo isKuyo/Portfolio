@@ -7,9 +7,17 @@ let gamesCache = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos em milissegundos
 
+// Cache persistente para dados parciais (para evitar "Desconhecido" quando temos dados anteriores)
+let persistentCache = {};
+
 // Função para verificar se o cache é válido
 const isCacheValid = () => {
   return gamesCache && (Date.now() - cacheTimestamp < CACHE_TTL);
+};
+
+// Função para verificar se os dados são válidos
+const isValidGameData = (game) => {
+  return game && game.name !== "Desconhecido" && game.visits > 0;
 };
 
 // Função para buscar dados com timeout
@@ -119,22 +127,52 @@ module.exports = async (req, res) => {
       const uni = universes.find((u) => String(u.placeId) === String(placeId));
       const icon = iconMap.get(String(placeId)) ?? null;
       const d = uni?.universeId ? detailsMap.get(String(uni.universeId)) : null;
-      return {
+      
+      // Dados atuais da API
+      const currentData = {
         name: d?.name ?? "Desconhecido",
         visits: d?.visits ?? 0,
-        icon,
+        icon: icon || (persistentCache[placeId]?.icon || null),
         link: `https://www.roblox.com/games/${placeId}`,
       };
+      
+      // Verificar se temos dados válidos no cache persistente
+      const cachedData = persistentCache[placeId];
+      
+      // Se os dados atuais não são válidos mas temos dados no cache persistente
+      if (!isValidGameData(currentData) && isValidGameData(cachedData)) {
+        return {
+          name: cachedData.name,
+          visits: cachedData.visits,
+          icon: icon || cachedData.icon,
+          link: currentData.link,
+          fromPersistentCache: true
+        };
+      }
+      
+      // Se os dados atuais são válidos, atualizar o cache persistente
+      if (isValidGameData(currentData)) {
+        persistentCache[placeId] = { ...currentData };
+      }
+      
+      return currentData;
     });
 
     // Atualizar cache apenas se tivermos dados válidos
-    const hasValidData = games.some(g => g.name !== "Desconhecido" && g.visits > 0);
+    const hasValidData = games.some(g => isValidGameData(g));
     if (hasValidData) {
       gamesCache = games;
       cacheTimestamp = Date.now();
     }
 
-    res.status(200).json({ games, fromCache: false });
+    // Verificar se todos os jogos têm dados válidos
+    const allValid = games.every(g => isValidGameData(g));
+    
+    res.status(200).json({ 
+      games, 
+      fromCache: false,
+      complete: allValid
+    });
   } catch (error) {
     console.error("Erro ao buscar dados do Roblox:", error.message);
     
@@ -144,6 +182,24 @@ module.exports = async (req, res) => {
         games: gamesCache, 
         fromCache: true,
         cacheAge: Math.floor((Date.now() - cacheTimestamp) / 1000) + "s"
+      });
+    }
+    
+    // Se não temos cache mas temos dados persistentes
+    if (Object.keys(persistentCache).length > 0) {
+      const persistentGames = PLACE_IDS.map(placeId => {
+        return persistentCache[placeId] || {
+          name: "Desconhecido",
+          visits: 0,
+          icon: null,
+          link: `https://www.roblox.com/games/${placeId}`
+        };
+      });
+      
+      return res.status(200).json({
+        games: persistentGames,
+        fromCache: true,
+        fromPersistentCache: true
       });
     }
     

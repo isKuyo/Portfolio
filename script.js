@@ -817,24 +817,19 @@ function renderWorks(filter = '') {
     const card = document.createElement('article');
     card.className = 'works-card';
     
-    // Processar URL do Streamable
+    // Processar URL do vídeo
     let videoContent = '';
-    if (work.video && work.video.includes('streamable.com')) {
-      // Extrair o ID do Streamable da URL
-      const streamableId = work.video.split('/').pop();
-      // Usar iframe do Streamable com parâmetros específicos para remover UI
+    if (work.drive_id) {
+      // Usar iframe do Google Drive
+      const driveId = work.drive_id;
       videoContent = `
-        <div class="streamable-wrapper">
-          <div class="streamable-inner">
-            <iframe 
-              src="https://streamable.com/e/${streamableId}?hd=1&dark=1" 
-              frameborder="0" 
-              allowfullscreen
-              allow="autoplay; fullscreen"
-              style="width: 150%; height: 150%; position: absolute; left: -25%; top: -25%; overflow: hidden; border: none;"
-            ></iframe>
-          </div>
-          <div class="video-overlay"></div>
+        <div class="drive-wrapper">
+          <iframe 
+            src="https://drive.google.com/file/d/${driveId}/preview" 
+            frameborder="0" 
+            allowfullscreen
+            allow="autoplay; fullscreen"
+          ></iframe>
         </div>
       `;
     } else if (work.video) {

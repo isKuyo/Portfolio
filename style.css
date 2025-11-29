@@ -1,6 +1,35 @@
 /* Accent text utility */
 .text-accent { color: var(--accent); }
 
+/* Visitor counter */
+.visitor-counter {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  color: white;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.visitor-counter .count {
+  color: var(--accent);
+  font-weight: bold;
+  margin-left: 4px;
+  display: inline-block;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
 /* Indicador de cache persistente */
 .cached-data-indicator {
   display: inline-block;

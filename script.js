@@ -238,9 +238,15 @@ const setPlaceholder = (message) => {
   grid.appendChild(placeholder);
 };
 
-const createCard = ({ name, visits, icon, link }) => {
+const createCard = ({ name, visits, icon, link, fromPersistentCache }) => {
   const card = document.createElement("article");
   card.className = "game-card";
+  
+  // Adicionar classe especial se os dados vierem do cache persistente
+  if (fromPersistentCache) {
+    card.classList.add("from-persistent-cache");
+  }
+  
   card.innerHTML = `
     <div class="game-card__header">
       <img src="${icon}" alt="Game icon for ${name}" />
@@ -248,6 +254,7 @@ const createCard = ({ name, visits, icon, link }) => {
         <h3>${name}</h3>
         <p class="game-card__meta">
           <span class="visit-count" data-text="${visits}">${visits}</span>
+          ${fromPersistentCache ? '<span class="cached-data-indicator" title="Dados armazenados localmente">*</span>' : ''}
         </p>
       </div>
     </div>
@@ -269,6 +276,8 @@ const fetchGameData = async (forceRefresh = false) => {
   
   // Verificar se os dados vieram do cache
   const fromCache = data.fromCache === true;
+  const fromPersistentCache = data.fromPersistentCache === true;
+  const isComplete = data.complete === true;
   
   // Mapear os jogos para o formato esperado
   const games = data.games.map((details) => ({
@@ -276,19 +285,29 @@ const fetchGameData = async (forceRefresh = false) => {
     visits: formatVisits(details.visits),
     icon: details.icon ?? "https://via.placeholder.com/150/111/FFFFFF?text=Roblox",
     link: details.link,
-    fromCache
+    fromCache,
+    fromPersistentCache: details.fromPersistentCache || fromPersistentCache
   }));
+  
+  // Adicionar metadados para ajudar na lógica de retry
+  games.isComplete = isComplete;
+  games.fromCache = fromCache;
+  games.fromPersistentCache = fromPersistentCache;
   
   return games;
 };
 
 // Variáveis para controle de retry
 let gamesRetryCount = 0;
-const MAX_AUTO_RETRIES = 3;
+const MAX_AUTO_RETRIES = 5; // Aumentado para 5 tentativas
 let gamesRetryTimeout = null;
 let lastGamesLoadAttempt = 0;
 
-const renderGames = async (isRetry = false, isManualRefresh = false) => {
+// Intervalo para verificar periodicamente os dados
+let gamesAutoRefreshInterval = null;
+const AUTO_REFRESH_INTERVAL = 30000; // 30 segundos
+
+const renderGames = async (isRetry = false) => {
   // Limpar qualquer timeout pendente
   if (gamesRetryTimeout) {
     clearTimeout(gamesRetryTimeout);
@@ -299,54 +318,45 @@ const renderGames = async (isRetry = false, isManualRefresh = false) => {
   const existingNote = document.querySelector('.games-section-note');
   if (existingNote) existingNote.remove();
   
-  // Remover botão de refresh anterior se existir
-  const existingRefreshBtn = document.querySelector('.games-refresh-btn');
-  if (existingRefreshBtn) existingRefreshBtn.remove();
-  
   // Mensagem de carregamento apropriada
   if (isRetry) {
     setPlaceholder(`Tentando novamente (${gamesRetryCount}/${MAX_AUTO_RETRIES})...`);
-  } else if (isManualRefresh) {
-    setPlaceholder("Atualizando dados...");
   } else {
     setPlaceholder("Carregando dados do Roblox...");
   }
 
   try {
     lastGamesLoadAttempt = Date.now();
-    // Forçar refresh quando for uma atualização manual
-    const games = await fetchGameData(isManualRefresh);
+    // Forçar refresh apenas nas tentativas de retry
+    const games = await fetchGameData(isRetry);
     
-    // Verificar se todos os jogos têm nomes válidos
-    const hasUnknownGames = games.some(game => game.name === "Desconhecido");
+    // Verificar se os dados estão completos usando a propriedade isComplete
+    const needsRetry = !games.isComplete;
     
     grid.innerHTML = "";
     games.forEach(createCard);
     
-    // Adicionar indicador se os dados vieram do cache
-    if (games.length > 0 && games[0].fromCache) {
-      const cacheNote = document.createElement("p");
-      cacheNote.className = "placeholder games-section-note";
-      cacheNote.textContent = "Dados carregados do cache. Clique em 'Atualizar dados' para buscar dados atualizados.";
-      grid.parentElement?.appendChild(cacheNote);
-    }
-    
-    // Resetar contador de tentativas após sucesso
-    gamesRetryCount = 0;
-    
-    // Se ainda tiver jogos desconhecidos, adicionar botão de atualização
-    if (hasUnknownGames) {
-      addRefreshButton();
+    // Resetar contador de tentativas se todos os dados estão corretos
+    if (!needsRetry) {
+      gamesRetryCount = 0;
       
-      // Tentar novamente automaticamente se ainda houver jogos desconhecidos
-      if (!isManualRefresh && gamesRetryCount < MAX_AUTO_RETRIES) {
-        gamesRetryCount++;
-        const delay = 3000 + (gamesRetryCount * 2000); // Aumenta o tempo entre tentativas
-        gamesRetryTimeout = setTimeout(() => renderGames(true), delay);
+      // Configurar verificação periódica para manter os dados atualizados
+      if (!gamesAutoRefreshInterval) {
+        gamesAutoRefreshInterval = setInterval(() => {
+          // Verificar se a página está visível antes de atualizar
+          if (document.visibilityState === 'visible') {
+            renderGames(true);
+          }
+        }, AUTO_REFRESH_INTERVAL);
       }
-    } else if (games.length > 0 && games[0].fromCache) {
-      // Adicionar botão de atualização mesmo se não houver jogos desconhecidos, mas os dados vieram do cache
-      addRefreshButton();
+    } 
+    // Se os dados estão incompletos, tentar novamente automaticamente
+    else if (gamesRetryCount < MAX_AUTO_RETRIES) {
+      gamesRetryCount++;
+      // Tempo de espera exponencial entre tentativas (2s, 4s, 8s, 16s, 32s)
+      const delay = Math.min(2000 * Math.pow(2, gamesRetryCount - 1), 30000);
+      console.log(`Dados incompletos, tentando novamente em ${delay/1000}s (tentativa ${gamesRetryCount}/${MAX_AUTO_RETRIES})`);
+      gamesRetryTimeout = setTimeout(() => renderGames(true), delay);
     }
   } catch (error) {
     console.error(error);
@@ -356,57 +366,48 @@ const renderGames = async (isRetry = false, isManualRefresh = false) => {
     // Adicionar nota explicativa
     const note = document.createElement("p");
     note.className = "placeholder games-section-note";
-    note.textContent = "API do Roblox indisponível no momento. Mostrando dados estáticos.";
+    note.textContent = "API do Roblox indisponível no momento. Tentando novamente automaticamente...";
     grid.parentElement?.appendChild(note);
     
-    // Adicionar botão de atualização
-    addRefreshButton();
-    
-    // Tentar novamente automaticamente se não for uma atualização manual
-    if (!isManualRefresh && gamesRetryCount < MAX_AUTO_RETRIES) {
+    // Tentar novamente automaticamente
+    if (gamesRetryCount < MAX_AUTO_RETRIES) {
       gamesRetryCount++;
-      const delay = 3000 + (gamesRetryCount * 2000); // Aumenta o tempo entre tentativas
+      // Tempo de espera exponencial entre tentativas (2s, 4s, 8s, 16s, 32s)
+      const delay = Math.min(2000 * Math.pow(2, gamesRetryCount - 1), 30000);
+      console.log(`Erro na API, tentando novamente em ${delay/1000}s (tentativa ${gamesRetryCount}/${MAX_AUTO_RETRIES})`);
       gamesRetryTimeout = setTimeout(() => renderGames(true), delay);
     }
   }
 };
 
-// Função para adicionar botão de atualização
-const addRefreshButton = () => {
-  // Evitar adicionar múltiplos botões
-  if (document.querySelector('.games-refresh-btn')) return;
-  
-  const refreshBtn = document.createElement("button");
-  refreshBtn.className = "btn games-refresh-btn";
-  refreshBtn.innerHTML = `
-    <svg viewBox="0 0 24 24" width="16" height="16" style="margin-right: 8px;">
-      <path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-    </svg>
-    Atualizar dados
-  `;
-  
-  // Evitar cliques repetidos
-  refreshBtn.addEventListener("click", () => {
-    // Verificar se passou tempo suficiente desde a última tentativa
-    const now = Date.now();
-    if (now - lastGamesLoadAttempt < 2000) return; // Evitar spam de cliques
-    
-    // Resetar contador e tentar novamente
-    gamesRetryCount = 0;
-    renderGames(false, true);
-  });
-  
-  // Adicionar ao DOM
-  const section = grid.parentElement;
-  if (section) {
-    const header = section.querySelector('.section__header');
-    if (header) {
-      header.appendChild(refreshBtn);
-    }
-  }
-};
-
+// Iniciar o carregamento dos jogos
 renderGames();
+
+// Limpar o intervalo de atualização automática quando a página for fechada
+window.addEventListener('beforeunload', () => {
+  if (gamesAutoRefreshInterval) {
+    clearInterval(gamesAutoRefreshInterval);
+    gamesAutoRefreshInterval = null;
+  }
+  if (gamesRetryTimeout) {
+    clearTimeout(gamesRetryTimeout);
+    gamesRetryTimeout = null;
+  }
+});
+
+// Pausar/retomar atualizações quando a página estiver oculta/visível
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !gamesAutoRefreshInterval) {
+    // Retomar atualizações quando a página ficar visível novamente
+    gamesAutoRefreshInterval = setInterval(() => {
+      renderGames(true);
+    }, AUTO_REFRESH_INTERVAL);
+  } else if (document.visibilityState === 'hidden' && gamesAutoRefreshInterval) {
+    // Pausar atualizações quando a página estiver oculta
+    clearInterval(gamesAutoRefreshInterval);
+    gamesAutoRefreshInterval = null;
+  }
+});
 
 document.querySelector("#year").textContent = new Date().getFullYear();
 

@@ -140,6 +140,25 @@ function findVideoByFolderName(name) {
 let gamesCache = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos em milissegundos
+const CACHE_DIR = path.join(__dirname, 'cache');
+const GAMES_CACHE_FILE = path.join(CACHE_DIR, 'games.json');
+try { fs.mkdirSync(CACHE_DIR, { recursive: true }); } catch {}
+
+function loadGamesCacheFromDisk() {
+  try {
+    const raw = fs.readFileSync(GAMES_CACHE_FILE, 'utf-8');
+    const j = JSON.parse(raw);
+    if (!j || !Array.isArray(j.games)) return null;
+    return { games: j.games, ts: Number(j.ts || 0) };
+  } catch { return null; }
+}
+
+function saveGamesCacheToDisk(games) {
+  try {
+    const payload = { ts: Date.now(), games };
+    fs.writeFileSync(GAMES_CACHE_FILE, JSON.stringify(payload));
+  } catch {}
+}
 
 // Função para verificar se o cache é válido
 const isCacheValid = () => {
@@ -169,6 +188,13 @@ app.get("/api/games", async (req, res) => {
   const forceRefresh = req.query.refresh === "true";
   
   // Retornar dados do cache se estiver válido e não for forçada atualização
+  if (!gamesCache) {
+    const disk = loadGamesCacheFromDisk();
+    if (disk && Array.isArray(disk.games)) {
+      gamesCache = disk.games;
+      cacheTimestamp = Number(disk.ts || 0);
+    }
+  }
   if (isCacheValid() && !forceRefresh) {
     return res.status(200).json({ games: gamesCache, fromCache: true });
   }
@@ -255,21 +281,25 @@ app.get("/api/games", async (req, res) => {
 
     // Atualizar cache apenas se tivermos dados válidos
     const hasValidData = games.some(g => g.name !== "Desconhecido" && g.visits > 0);
+    const allValid = games.every(g => g.name !== "Desconhecido" && g.visits > 0);
     if (hasValidData) {
       gamesCache = games;
       cacheTimestamp = Date.now();
+      saveGamesCacheToDisk(gamesCache);
     }
 
-    res.status(200).json({ games, fromCache: false });
+    res.status(200).json({ games, fromCache: false, complete: allValid });
   } catch (error) {
     console.error("Erro ao buscar dados do Roblox:", error.message);
     
     // Se temos um cache, mesmo que expirado, usamos como fallback
     if (gamesCache) {
+      const cacheAllValid = gamesCache.every(g => g && g.name && g.name !== "Desconhecido" && Number(g.visits || 0) > 0);
       return res.status(200).json({ 
         games: gamesCache, 
         fromCache: true,
-        cacheAge: Math.floor((Date.now() - cacheTimestamp) / 1000) + "s"
+        cacheAge: Math.floor((Date.now() - cacheTimestamp) / 1000) + "s",
+        complete: cacheAllValid
       });
     }
     

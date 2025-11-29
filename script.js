@@ -471,7 +471,105 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// Set current year in footer
 document.querySelector("#year").textContent = new Date().getFullYear();
+
+// Visitor counter functionality
+const VISITOR_COUNT_KEY = 'portfolio-visitor-count';
+const VISITOR_LAST_VISIT_KEY = 'portfolio-last-visit';
+const VISITOR_SESSION_KEY = 'portfolio-session-id';
+
+async function initVisitorCounter() {
+  const visitorCountElement = document.getElementById('visitor-count');
+  if (!visitorCountElement) return;
+  
+  // Generate a unique session ID if not exists
+  if (!sessionStorage.getItem(VISITOR_SESSION_KEY)) {
+    sessionStorage.setItem(VISITOR_SESSION_KEY, Date.now().toString() + Math.random().toString(36).substring(2, 15));
+  }
+  
+  // Get current count from localStorage as initial value
+  let count = parseInt(localStorage.getItem(VISITOR_COUNT_KEY) || '0');
+  const lastVisit = localStorage.getItem(VISITOR_LAST_VISIT_KEY) || '0';
+  const now = Date.now();
+  const hoursSinceLastVisit = (now - parseInt(lastVisit)) / (1000 * 60 * 60);
+  
+  // Display initial count while we check with the server
+  visitorCountElement.textContent = count.toString();
+  
+  try {
+    // First try to get the current count from the server
+    const response = await fetch('/api/visitor-count');
+    if (response.ok) {
+      const data = await response.json();
+      if (data && typeof data.count === 'number') {
+        // Update with server count
+        count = data.count;
+        localStorage.setItem(VISITOR_COUNT_KEY, count.toString());
+        visitorCountElement.textContent = count.toString();
+      }
+    }
+  } catch (error) {
+    console.log('Could not fetch visitor count from server, using local count');
+  }
+  
+  // Only increment if it's been at least 1 hour since last visit
+  // or if this is the first visit in this session
+  if (hoursSinceLastVisit >= 1 || !lastVisit) {
+    count++;
+    localStorage.setItem(VISITOR_COUNT_KEY, count.toString());
+    localStorage.setItem(VISITOR_LAST_VISIT_KEY, now.toString());
+    
+    // Save to server if possible
+    try {
+      const result = await saveVisitorCountToServer(count);
+      if (result && result.count) {
+        visitorCountElement.textContent = result.count.toString();
+      } else {
+        visitorCountElement.textContent = count.toString();
+      }
+      
+      // Animate the counter
+      visitorCountElement.style.animation = 'pulse 1s';
+      setTimeout(() => {
+        visitorCountElement.style.animation = '';
+      }, 1000);
+    } catch (error) {
+      console.error('Error saving visitor count:', error);
+      visitorCountElement.textContent = count.toString();
+    }
+  }
+}
+
+async function saveVisitorCountToServer(count) {
+  try {
+    // Try to save to server if API exists
+    const response = await fetch('/api/visitor-count', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ count })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.count && data.count !== count) {
+        // Update local storage with server count if different
+        localStorage.setItem(VISITOR_COUNT_KEY, data.count.toString());
+      }
+      return data;
+    }
+    return null;
+  } catch (error) {
+    // Silently fail if server API doesn't exist
+    console.log('Could not save visitor count to server, using local storage only');
+    return null;
+  }
+}
+
+// Initialize visitor counter
+initVisitorCounter();
 
 // --- Audio Player (Local assets) ---
 const elPlayer = document.querySelector('.audio-player');

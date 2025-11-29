@@ -664,46 +664,18 @@ p {
   border-radius: 12px;
   overflow: hidden;
   background: #000;
-  box-shadow: 0 0 0 1px #000;
 }
 
 .streamable-embed iframe {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -2px;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
   border: none !important;
   background: #000;
-  box-shadow: none !important;
-  outline: none !important;
 }
 
-.streamable-embed::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.8);
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Remover bordas brancas do player do Streamable */
-.streamable-embed iframe::-webkit-media-controls,
-.streamable-embed iframe::-webkit-media-controls-panel,
-.streamable-embed iframe::-webkit-media-controls-panel-container,
-.streamable-embed iframe::-webkit-media-controls-play-button,
-.streamable-embed iframe::-webkit-media-controls-timeline,
-.streamable-embed iframe::-webkit-media-controls-current-time-display,
-.streamable-embed iframe::-webkit-media-controls-time-remaining-display,
-.streamable-embed iframe::-webkit-media-controls-mute-button,
-.streamable-embed iframe::-webkit-media-controls-toggle-closed-captions-button,
-.streamable-embed iframe::-webkit-media-controls-volume-slider {
-  background: #000 !important;
-  border: none !important;
-  box-shadow: none !important;
-}
 
 .works-card__media video {
   width: 100%;

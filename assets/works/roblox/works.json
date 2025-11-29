@@ -2,15 +2,18 @@
   "works": [
     {
       "name": "Color Picker",
-      "tags": ["UI", "UX", "Systems"]
+      "tags": ["UI", "UX", "Systems"],
+      "video": "https://streamable.com/ebj1bo"
     },
     {
       "name": "Minimap",
-      "tags": ["UI", "Systems"]
+      "tags": ["UI", "Systems"],
+      "video": "https://streamable.com/ex4tjh"
     },
     {
       "name": "Grab",
-      "tags": ["Systems", "Mechanics"]
+      "tags": ["Systems", "Mechanics"],
+      "video": "https://streamable.com/3isy2m"
     }
   ],
   "all_tags": ["UI", "UX", "UI Design", "Scripting", "Systems", "Mechanics", "Fullstack", "Backend", "Frontend", "Skills"]

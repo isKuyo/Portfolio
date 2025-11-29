@@ -273,21 +273,115 @@ const fetchGameData = async () => {
   }));
 };
 
-const renderGames = async () => {
-  setPlaceholder("Loading live data from the Roblox API...");
+// Variáveis para controle de retry
+let gamesRetryCount = 0;
+const MAX_AUTO_RETRIES = 3;
+let gamesRetryTimeout = null;
+let lastGamesLoadAttempt = 0;
+
+const renderGames = async (isRetry = false, isManualRefresh = false) => {
+  // Limpar qualquer timeout pendente
+  if (gamesRetryTimeout) {
+    clearTimeout(gamesRetryTimeout);
+    gamesRetryTimeout = null;
+  }
+  
+  // Remover qualquer nota de erro anterior
+  const existingNote = document.querySelector('.games-section-note');
+  if (existingNote) existingNote.remove();
+  
+  // Remover botão de refresh anterior se existir
+  const existingRefreshBtn = document.querySelector('.games-refresh-btn');
+  if (existingRefreshBtn) existingRefreshBtn.remove();
+  
+  // Mensagem de carregamento apropriada
+  if (isRetry) {
+    setPlaceholder(`Tentando novamente (${gamesRetryCount}/${MAX_AUTO_RETRIES})...`);
+  } else if (isManualRefresh) {
+    setPlaceholder("Atualizando dados...");
+  } else {
+    setPlaceholder("Carregando dados do Roblox...");
+  }
 
   try {
+    lastGamesLoadAttempt = Date.now();
     const games = await fetchGameData();
+    
+    // Verificar se todos os jogos têm nomes válidos
+    const hasUnknownGames = games.some(game => game.name === "Desconhecido");
+    
     grid.innerHTML = "";
     games.forEach(createCard);
+    
+    // Resetar contador de tentativas após sucesso
+    gamesRetryCount = 0;
+    
+    // Se ainda tiver jogos desconhecidos, adicionar botão de atualização
+    if (hasUnknownGames) {
+      addRefreshButton();
+      
+      // Tentar novamente automaticamente se ainda houver jogos desconhecidos
+      if (!isManualRefresh && gamesRetryCount < MAX_AUTO_RETRIES) {
+        gamesRetryCount++;
+        const delay = 3000 + (gamesRetryCount * 2000); // Aumenta o tempo entre tentativas
+        gamesRetryTimeout = setTimeout(() => renderGames(true), delay);
+      }
+    }
   } catch (error) {
     console.error(error);
     grid.innerHTML = "";
     fallbackGames.forEach(createCard);
+    
+    // Adicionar nota explicativa
     const note = document.createElement("p");
-    note.className = "placeholder";
-    note.textContent = "Proxy/API unreachable right now. Showing static data.";
+    note.className = "placeholder games-section-note";
+    note.textContent = "API do Roblox indisponível no momento. Mostrando dados estáticos.";
     grid.parentElement?.appendChild(note);
+    
+    // Adicionar botão de atualização
+    addRefreshButton();
+    
+    // Tentar novamente automaticamente se não for uma atualização manual
+    if (!isManualRefresh && gamesRetryCount < MAX_AUTO_RETRIES) {
+      gamesRetryCount++;
+      const delay = 3000 + (gamesRetryCount * 2000); // Aumenta o tempo entre tentativas
+      gamesRetryTimeout = setTimeout(() => renderGames(true), delay);
+    }
+  }
+};
+
+// Função para adicionar botão de atualização
+const addRefreshButton = () => {
+  // Evitar adicionar múltiplos botões
+  if (document.querySelector('.games-refresh-btn')) return;
+  
+  const refreshBtn = document.createElement("button");
+  refreshBtn.className = "btn games-refresh-btn";
+  refreshBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="16" height="16" style="margin-right: 8px;">
+      <path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+    </svg>
+    Atualizar dados
+  `;
+  
+  // Evitar cliques repetidos
+  refreshBtn.addEventListener("click", () => {
+    // Verificar se passou tempo suficiente desde a última tentativa
+    const now = Date.now();
+    if (now - lastGamesLoadAttempt < 2000) return; // Evitar spam de cliques
+    
+    // Resetar contador e tentar novamente
+    gamesRetryCount = 0;
+    renderGames(false, true);
+  });
+  
+  // Adicionar ao DOM
+  const section = grid.parentElement;
+  if (section) {
+    const header = section.querySelector('.section__header');
+    if (header) {
+      header.appendChild(refreshBtn);
+    }
   }
 };
 

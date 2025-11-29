@@ -136,17 +136,61 @@ function findVideoByFolderName(name) {
   }
 }
 
-app.get("/api/games", async (_req, res) => {
+// Cache de dados para reduzir chamadas à API
+let gamesCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos em milissegundos
+
+// Função para verificar se o cache é válido
+const isCacheValid = () => {
+  return gamesCache && (Date.now() - cacheTimestamp < CACHE_TTL);
+};
+
+// Função para buscar dados com timeout
+const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
+app.get("/api/games", async (req, res) => {
+  // Verificar se devemos forçar uma atualização do cache
+  const forceRefresh = req.query.refresh === "true";
+  
+  // Retornar dados do cache se estiver válido e não for forçada atualização
+  if (isCacheValid() && !forceRefresh) {
+    return res.status(200).json({ games: gamesCache, fromCache: true });
+  }
+
   try {
     const placeQuery = PLACE_IDS.map((id) => `placeIds=${id}`).join("&");
 
     // 1) Mapear placeId -> universeId via roproxy
     const universes = await Promise.all(
       PLACE_IDS.map(async (placeId) => {
-        const r = await fetch(`https://apis.roproxy.com/universes/v1/places/${placeId}/universe`);
-        if (!r.ok) return { placeId, universeId: null };
-        const j = await r.json();
-        return { placeId, universeId: j.universeId ?? null };
+        try {
+          const r = await fetchWithTimeout(
+            `https://apis.roproxy.com/universes/v1/places/${placeId}/universe`,
+            {}, 3000
+          );
+          if (!r.ok) return { placeId, universeId: null };
+          const j = await r.json();
+          return { placeId, universeId: j.universeId ?? null };
+        } catch (err) {
+          console.error(`Erro ao buscar universeId para ${placeId}:`, err.message);
+          return { placeId, universeId: null };
+        }
       })
     );
 
@@ -154,26 +198,46 @@ app.get("/api/games", async (_req, res) => {
     const universeIdsCsv = validUniverses.map((u) => u.universeId).join(",");
 
     // 2) Detalhes de jogos por universeId (visitas, nome)
-    const detailsRes = universeIdsCsv
-      ? await fetch(`https://games.roproxy.com/v1/games?universeIds=${universeIdsCsv}`)
-      : { ok: false };
+    let detailsRes = { ok: false };
+    if (universeIdsCsv) {
+      try {
+        detailsRes = await fetchWithTimeout(
+          `https://games.roproxy.com/v1/games?universeIds=${universeIdsCsv}`,
+          {}, 3000
+        );
+      } catch (err) {
+        console.error("Erro ao buscar detalhes dos jogos:", err.message);
+      }
+    }
 
     // 3) Ícones por placeId
-    const iconRes = await fetch(
-      `https://thumbnails.roproxy.com/v1/places/gameicons?${placeQuery}&returnPolicy=PlaceHolder&size=256x256&format=Png&isCircular=false`
-    );
+    let iconMap = new Map();
+    try {
+      const iconRes = await fetchWithTimeout(
+        `https://thumbnails.roproxy.com/v1/places/gameicons?${placeQuery}&returnPolicy=PlaceHolder&size=256x256&format=Png&isCircular=false`,
+        {}, 3000
+      );
 
-    if (!iconRes.ok) throw new Error("Icon API failure");
-
-    const icons = await iconRes.json();
-    const iconMap = new Map(icons.data.map((item) => [String(item.targetId), item.imageUrl]));
+      if (iconRes.ok) {
+        const icons = await iconRes.json();
+        iconMap = new Map(
+          icons.data.map((item) => [String(item.targetId), item.imageUrl])
+        );
+      }
+    } catch (err) {
+      console.error("Erro ao buscar ícones dos jogos:", err.message);
+    }
 
     let detailsMap = new Map();
     if (detailsRes.ok) {
-      const detailsJson = await detailsRes.json();
-      detailsJson.data.forEach((g) => {
-        detailsMap.set(String(g.id), g); // id = universeId
-      });
+      try {
+        const detailsJson = await detailsRes.json();
+        detailsJson.data.forEach((g) => {
+          detailsMap.set(String(g.id), g);
+        });
+      } catch (err) {
+        console.error("Erro ao processar detalhes dos jogos:", err.message);
+      }
     }
 
     // 4) Montar resposta na ordem de PLACE_IDS
@@ -188,6 +252,30 @@ app.get("/api/games", async (_req, res) => {
         link: `https://www.roblox.com/games/${placeId}`,
       };
     });
+
+    // Atualizar cache apenas se tivermos dados válidos
+    const hasValidData = games.some(g => g.name !== "Desconhecido" && g.visits > 0);
+    if (hasValidData) {
+      gamesCache = games;
+      cacheTimestamp = Date.now();
+    }
+
+    res.status(200).json({ games, fromCache: false });
+  } catch (error) {
+    console.error("Erro ao buscar dados do Roblox:", error.message);
+    
+    // Se temos um cache, mesmo que expirado, usamos como fallback
+    if (gamesCache) {
+      return res.status(200).json({ 
+        games: gamesCache, 
+        fromCache: true,
+        cacheAge: Math.floor((Date.now() - cacheTimestamp) / 1000) + "s"
+      });
+    }
+    
+    res.status(502).json({ error: "Roblox não respondeu no momento" });
+  }
+});
 
 app.get("/api/audio/info", async (req, res) => {
   const id = extractReqVideoId(req);
@@ -224,13 +312,6 @@ app.get("/api/audio/info", async (req, res) => {
       console.error("Audio info fallback error:", e2.message);
       return res.status(500).json({ error: "Audio info failed" });
     }
-  }
-});
-
-    res.json({ games });
-  } catch (error) {
-    console.error("Erro ao buscar dados do Roblox:", error.message);
-    res.status(502).json({ error: "Roblox não respondeu no momento" });
   }
 });
 

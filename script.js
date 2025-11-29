@@ -263,7 +263,13 @@ const createCard = ({ name, visits, icon, link }) => {
 
 const fetchGameData = async (forceRefresh = false) => {
   const url = forceRefresh ? "/api/games?refresh=true" : "/api/games";
-  const response = await fetch(url);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const response = await fetch(url, { signal: controller.signal }).catch((e) => {
+    clearTimeout(timeoutId);
+    throw e;
+  });
+  clearTimeout(timeoutId);
   if (!response.ok) throw new Error("Proxy offline");
   const data = await response.json();
   
@@ -330,6 +336,7 @@ function loadGamesFromLocalCache() {
 // Interval for periodic background refresh
 let gamesAutoRefreshInterval = null;
 const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+let initialLoadGuard = null;
 
 const renderGames = async (isRetry = false) => {
   // Limpar qualquer timeout pendente
@@ -352,6 +359,13 @@ const renderGames = async (isRetry = false) => {
       cached.forEach(createCard);
     } else {
       setPlaceholder("Loading experiences...");
+      // Guard: if nothing loaded within 2.5s, show a minimal fallback
+      initialLoadGuard = setTimeout(() => {
+        if (!grid.querySelector('.game-card')) {
+          grid.innerHTML = "";
+          fallbackGames.forEach(createCard);
+        }
+      }, 2500);
     }
   }
 
@@ -363,8 +377,19 @@ const renderGames = async (isRetry = false) => {
     // Check if dataset is complete
     const needsRetry = !games.isComplete;
 
-    // If incomplete, don't update UI; keep current (cached or placeholder) and retry silently
+    // If incomplete, render any valid subset immediately and retry silently
     if (needsRetry) {
+      const validNow = games.filter(g => g && g.name && g.name !== 'Unknown');
+      if (validNow.length) {
+        if (initialLoadGuard) { clearTimeout(initialLoadGuard); initialLoadGuard = null; }
+        grid.innerHTML = "";
+        validNow.forEach(createCard);
+      } else if (!grid.querySelector('.game-card')) {
+        // Show minimal fallback only if nothing is visible yet
+        if (initialLoadGuard) { clearTimeout(initialLoadGuard); initialLoadGuard = null; }
+        grid.innerHTML = "";
+        fallbackGames.forEach(createCard);
+      }
       if (gamesRetryCount < MAX_AUTO_RETRIES) {
         gamesRetryCount++;
         const delay = Math.min(2000 * Math.pow(2, gamesRetryCount - 1), 30000);
@@ -375,6 +400,7 @@ const renderGames = async (isRetry = false) => {
     }
 
     // Render only complete dataset
+    if (initialLoadGuard) { clearTimeout(initialLoadGuard); initialLoadGuard = null; }
     grid.innerHTML = "";
     games.forEach(createCard);
 

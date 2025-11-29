@@ -820,9 +820,10 @@ function renderWorks(filter = '') {
     // Processar URL do vídeo
     let videoContent = '';
     if (work.streamable_id) {
-      // Usar vídeo nativo com link direto do Streamable
+      // Usar vídeo nativo com link direto do MP4 do Streamable
       const streamableId = work.streamable_id;
-      const directVideoUrl = `https://streamabledl.com/${streamableId}`;
+      // Usar o link direto para o MP4 do Streamable
+      const directVideoUrl = `https://cdn-cf-east.streamable.com/video/mp4/${streamableId}.mp4`;
       
       videoContent = `
         <div class="video-wrapper">
@@ -830,7 +831,7 @@ function renderWorks(filter = '') {
             src="${directVideoUrl}" 
             preload="metadata" 
             playsinline
-            poster="https://streamabledl.com/${streamableId}/poster.jpg"
+            poster="https://cdn-cf-east.streamable.com/image/${streamableId}.jpg"
           ></video>
           <div class="video-controls">
             <button class="video-btn video-playpause" aria-label="Play/Pause">
@@ -897,58 +898,71 @@ function renderWorks(filter = '') {
 }
 
 function initVideoControls() {
-  document.querySelectorAll('.works-card__media').forEach((media) => {
-    // Ignorar se for um embed do Streamable
-    if (media.querySelector('.streamable-embed')) return;
-    
+  // Encontrar todos os wrappers de vídeo
+  const videoWrappers = document.querySelectorAll('.video-wrapper');
+  
+  videoWrappers.forEach(media => {
     const video = media.querySelector('video');
-    const playBtn = media.querySelector('.video-playpause');
-    const fullscreenBtn = media.querySelector('.video-fullscreen');
-    const slider = media.querySelector('.video-slider');
-    const progressFilled = media.querySelector('.video-progress-filled');
-    const timeDisplay = media.querySelector('.video-time');
     if (!video) return;
 
-    const formatTime = (sec) => {
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
+    // Botão de play/pause
+    const playPauseBtn = media.querySelector('.video-playpause');
+    
+    const togglePlay = () => {
+      if (video.paused || video.ended) {
+        video.play();
+        media.classList.add('playing');
+      } else {
+        video.pause();
+        media.classList.remove('playing');
+      }
     };
-
-    const updatePlayState = () => {
-      media.classList.toggle('playing', !video.paused);
+    
+    video.addEventListener('click', togglePlay);
+    playPauseBtn?.addEventListener('click', togglePlay);
+    
+    // Atualizar progresso
+    const progressBar = media.querySelector('.video-progress-filled');
+    const timeDisplay = media.querySelector('.video-time');
+    const slider = media.querySelector('.video-slider');
+    
+    const formatTime = (seconds) => {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
-
+    
     const updateProgress = () => {
       if (!video.duration) return;
-      const pct = (video.currentTime / video.duration) * 100;
-      if (slider) slider.value = pct;
-      if (progressFilled) progressFilled.style.width = `${pct}%`;
-      if (timeDisplay) timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+      
+      const percent = (video.currentTime / video.duration) * 100;
+      if (progressBar) progressBar.style.width = `${percent}%`;
+      if (slider) slider.value = percent;
+      
+      if (timeDisplay) {
+        timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+      }
     };
-
-    playBtn?.addEventListener('click', () => {
-      if (video.paused) video.play();
-      else video.pause();
-    });
-
-    video.addEventListener('play', updatePlayState);
-    video.addEventListener('pause', updatePlayState);
-    video.addEventListener('ended', updatePlayState);
+    
     video.addEventListener('timeupdate', updateProgress);
     video.addEventListener('loadedmetadata', updateProgress);
-
+    
     slider?.addEventListener('input', () => {
       if (!video.duration) return;
       video.currentTime = (slider.value / 100) * video.duration;
     });
 
+    // Fullscreen
+    const fullscreenBtn = media.querySelector('.video-fullscreen');
+    
     fullscreenBtn?.addEventListener('click', () => {
       const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
       if (fsEl === media) {
+        media.classList.remove('fullscreen');
         if (document.exitFullscreen) document.exitFullscreen();
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       } else {
+        media.classList.add('fullscreen');
         if (media.requestFullscreen) media.requestFullscreen();
         else if (media.webkitRequestFullscreen) media.webkitRequestFullscreen();
         else if (media.msRequestFullscreen) media.msRequestFullscreen();
@@ -974,18 +988,10 @@ function initVideoControls() {
       video.muted = video.volume === 0;
       updateMuteState();
     });
-
-    const onFsChange = () => {
-      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
-      media.classList.toggle('is-fullscreen', fsEl === media);
-    };
-    document.addEventListener('fullscreenchange', onFsChange);
-    document.addEventListener('webkitfullscreenchange', onFsChange);
-
-    video.addEventListener('click', () => {
-      if (video.paused) video.play();
-      else video.pause();
-    });
+    
+    // Inicializar estado
+    updateMuteState();
+    updateProgress();
   });
 }
 

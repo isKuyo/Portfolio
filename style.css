@@ -673,6 +673,7 @@ p {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  border-radius: 12px;
 }
 
 /* Overlay para esconder as bordas brancas - apenas nas bordas */
@@ -685,7 +686,7 @@ p {
   z-index: 2;
   pointer-events: none;
   border-radius: 12px;
-  border: 1px solid #000;
+  box-shadow: inset 0 0 0 1px #000;
 }
 
 /* Removemos as bordas adicionais para mostrar os controles do player */

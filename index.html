@@ -15,6 +15,15 @@
   <body>
     <div class="bg-grid" aria-hidden="true"></div>
     <div class="grid-highlight" aria-hidden="true"></div>
+    
+    <div class="disclaimer-modal" id="disclaimerModal">
+      <div class="disclaimer-content">
+        <h2>Aviso Legal</h2>
+        <p>Você não está autorizado a copiar o design ou ideia deste portfólio sem autorização prévia.</p>
+        <p>Todo o conteúdo está protegido por direitos autorais.</p>
+        <button id="proceedBtn" class="btn" disabled>Aguarde <span id="countdown">5</span>s</button>
+      </div>
+    </div>
     <main class="page">
       <header class="hero">
         <div>
@@ -158,7 +167,7 @@
               ImGui-style apps, custom tooling, and utilities that support the team when
               the brief gets experimental.
             </p>
-            <button class="btn pill" type="button">
+            <button class="btn pill disabled" type="button" disabled aria-disabled="true">
               View work
             </button>
           </article>

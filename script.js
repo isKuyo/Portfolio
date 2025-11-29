@@ -825,11 +825,12 @@ function renderWorks(filter = '') {
       videoContent = `
         <div class="streamable-embed">
           <iframe
-            src="https://streamable.com/e/${streamableId}?loop=0"
+            src="https://streamable.com/e/${streamableId}?loop=0&autoplay=0"
             frameborder="0"
             scrolling="no"
             allowfullscreen
-            style="width:100%;height:100%;"
+            style="width:100%;height:100%;background:#000;border:none;"
+            loading="lazy"
           ></iframe>
         </div>
       `;

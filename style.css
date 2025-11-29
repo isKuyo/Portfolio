@@ -668,11 +668,10 @@ p {
 
 .streamable-embed iframe {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 105%;
-  height: 105%;
-  transform: translate(-50%, -50%);
+  top: -3%;
+  left: -1%;
+  width: 102%;
+  height: 106%;
   border: none !important;
 }
 

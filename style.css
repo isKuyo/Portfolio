@@ -337,13 +337,25 @@ h1 {
 
 .offline-message {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
+  color: #747f8d; /* Cor do status offline */
+  font-weight: 600;
 }
 
-.online-message {
+.status-online {
   font-size: 0.85rem;
-  color: #53F09D; /* Mesma cor do círculo de status online */
+  color: #53F09D; /* Cor do status online */
+  font-weight: 600;
+}
+
+.status-idle {
+  font-size: 0.85rem;
+  color: #faa61a; /* Cor do status idle/away */
+  font-weight: 600;
+}
+
+.status-dnd {
+  font-size: 0.85rem;
+  color: #ed4245; /* Cor do status do not disturb */
   font-weight: 600;
 }
 
@@ -648,6 +660,7 @@ p {
   padding-bottom: 56.25%; /* Proporção 16:9 */
   border-radius: 12px;
   overflow: hidden;
+  background: #000;
 }
 
 .streamable-embed iframe {
@@ -656,7 +669,8 @@ p {
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border: none;
+  background: #000;
 }
 
 .works-card__media video {

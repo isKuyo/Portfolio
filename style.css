@@ -660,19 +660,14 @@ p {
 
 
 .works-card__media video {
+  display: block;
   width: 100%;
   border-radius: 12px;
   background: #000;
   cursor: pointer;
 }
 
-.works-card__media video::-webkit-media-controls {
-  display: none !important;
-}
 
-.works-card__media video::-webkit-media-controls-enclosure {
-  display: none !important;
-}
 
 .video-controls {
   position: absolute;

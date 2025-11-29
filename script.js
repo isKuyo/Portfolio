@@ -822,14 +822,14 @@ function renderWorks(filter = '') {
     if (work.video && work.video.includes('streamable.com')) {
       // Extrair o ID do Streamable da URL
       const streamableId = work.video.split('/').pop();
-      // Usar iframe do Streamable
+      // Usar iframe do Streamable (player nativo deles)
       videoContent = `
-        <div class="streamable-embed">
+        <div class="streamable-wrapper">
           <iframe 
-            allow="fullscreen;autoplay" 
-            allowfullscreen 
-            src="https://streamable.com/e/${streamableId}?loop=0" 
-            style="border:none;"
+            src="https://streamable.com/e/${streamableId}?autoplay=0" 
+            frameborder="0" 
+            allowfullscreen
+            allow="autoplay; fullscreen"
           ></iframe>
         </div>
       `;

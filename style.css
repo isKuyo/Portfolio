@@ -669,8 +669,8 @@ p {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 115%;
-  height: 135%;
+  width: 140%;
+  height: 250%;
   transform: translate(-50%, -50%);
 }
 

@@ -17,7 +17,7 @@ const isCacheValid = () => {
 
 // Função para verificar se os dados são válidos
 const isValidGameData = (game) => {
-  return game && game.name !== "Desconhecido" && game.visits > 0;
+  return Boolean(game && game.name && game.name !== "Unknown") && Number(game.visits || 0) >= 0;
 };
 
 // Função para buscar dados com timeout
@@ -110,6 +110,23 @@ module.exports = async (req, res) => {
       console.error("Erro ao buscar ícones dos jogos:", err.message);
     }
 
+    // 3b) Fallback: detalhes por placeId (nome/visits) para melhorar cold-start
+    let placeDetailsMap = new Map();
+    try {
+      const placeQuery = PLACE_IDS.map((id) => `placeIds=${id}`).join("&");
+      const pdRes = await fetchWithTimeout(
+        `https://games.roproxy.com/v1/games/multiget-place-details?${placeQuery}`,
+        {}, 4000
+      );
+      if (pdRes.ok) {
+        const pdJson = await pdRes.json();
+        const list = Array.isArray(pdJson) ? pdJson : (Array.isArray(pdJson?.data) ? pdJson.data : []);
+        list.forEach((pd) => { if (pd && pd.placeId != null) placeDetailsMap.set(String(pd.placeId), pd); });
+      }
+    } catch (err) {
+      console.error("Erro ao buscar place details:", err.message);
+    }
+
     let detailsMap = new Map();
     if (detailsRes.ok) {
       try {
@@ -127,11 +144,12 @@ module.exports = async (req, res) => {
       const uni = universes.find((u) => String(u.placeId) === String(placeId));
       const icon = iconMap.get(String(placeId)) ?? null;
       const d = uni?.universeId ? detailsMap.get(String(uni.universeId)) : null;
+      const pd = placeDetailsMap.get(String(placeId));
       
       // Dados atuais da API
       const currentData = {
-        name: d?.name ?? "Desconhecido",
-        visits: d?.visits ?? 0,
+        name: d?.name ?? pd?.name ?? "Unknown",
+        visits: (typeof d?.visits === 'number' ? d.visits : (typeof pd?.visits === 'number' ? pd.visits : 0)),
         icon: icon || (persistentCache[placeId]?.icon || null),
         link: `https://www.roblox.com/games/${placeId}`,
       };

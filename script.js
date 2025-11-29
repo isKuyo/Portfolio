@@ -867,6 +867,9 @@ function renderWorks(filter = '') {
 
 function initVideoControls() {
   document.querySelectorAll('.works-card__media').forEach((media) => {
+    // Ignorar se for um embed do Streamable
+    if (media.querySelector('.streamable-embed')) return;
+    
     const video = media.querySelector('video');
     const playBtn = media.querySelector('.video-playpause');
     const fullscreenBtn = media.querySelector('.video-fullscreen');

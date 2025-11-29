@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rwque - Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="grid-highlight" aria-hidden="true"></div>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Fullstack • Technical Experience Development</p>
+          <div class="hero__title-row">
+            <h1>rwque</h1>
+            <div class="discord-presence" id="discord-presence">
+              <div class="discord-avatar-wrapper">
+                <img id="discord-avatar" class="hero__avatar" src="" alt="Discord Avatar" />
+                <span class="discord-status"></span>
+              </div>
+              <div class="discord-activity" id="discord-activity"></div>
+            </div>
+          </div>
+          <p class="hero__bio">
+            I am <span class="text-accent">16 years</span> old developer, and i build fast, reliable systems for Roblox and the web. From responsive UI to optimized gameplay infrastructure. I focus on clean logic, smooth interactions, and shipping solutions that teams can trust to work on day one. My workflow is built around efficiency, clarity, and the ability to turn ideas into production-ready features quickly.
+          </p>
+          <div class="hero__tags">
+            <span>Luau</span>
+            <span>C++</span>
+            <span>C#</span>
+            <span>JavaScript</span>
+          </div>
+          <div class="hero__actions">
+            <div class="btn-group">
+              <a
+                class="btn"
+                href="https://discord.com/users/1088946006663630969"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open Discord
+              </a>
+              <button type="button" class="btn icon" data-copy aria-label="Copy Discord">
+                <span class="sr-only">Copy Discord</span>
+                <svg class="icon-copy" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M9 9V5.5A2.5 2.5 0 0 1 11.5 3h7A2.5 2.5 0 0 1 21 5.5v7a2.5 2.5 0 0 1-2.5 2.5H15"
+                  />
+                  <rect x="3" y="9" width="12" height="12" rx="2" />
+                </svg>
+                <svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12.5 10 17l9-10" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <article class="hero__card">
+          <div>
+            <p class="eyebrow">Current focus</p>
+            <h3>High-performance systems for live experiences</h3>
+            <p>
+              Delivering fast, reliable systems and polished interfaces. Fullstack scripting, smooth UI motion, and clean client/server pipelines.
+            </p>
+          </div>
+          <ul>
+            <li><span>Realtime scripting</span></li>
+            <li><span>Optimized workflows</span></li>
+            <li><span>Clean visuals and smooth transitions</span></li>
+          </ul>
+        </article>
+      </header>
+
+      <section class="section pricing-section">
+        <div class="section__header">
+          <div>
+            <p class="eyebrow">Pricing</p>
+            <h2>Payment & Terms</h2>
+          </div>
+        </div>
+        <div class="pricing-content">
+          <article class="pricing-card pricing-card--large">
+            <h3>Accepted Payments</h3>
+            <div class="pricing-methods">
+              <div class="pricing-method">
+                <img class="pricing-icon" src="./assets/images/paypal.svg" alt="PayPal" />
+                <span>PayPal</span>
+              </div>
+              <div class="pricing-method">
+                <img class="pricing-icon" src="./assets/images/robux.png" alt="Robux" />
+                <span>Robux</span>
+              </div>
+              <div class="pricing-method">
+                <img class="pricing-icon" src="./assets/images/pix.png" alt="Pix" />
+                <span>BRL (Pix)</span>
+              </div>
+            </div>
+            <div class="pricing-divider"></div>
+            <h3>Work Types</h3>
+            <div class="pricing-types">
+              <div class="pricing-type">
+                <span class="pricing-label">Long-term</span>
+                <span class="pricing-desc">Ongoing collaboration with a team or project</span>
+              </div>
+              <div class="pricing-type">
+                <span class="pricing-label">Short-term</span>
+                <span class="pricing-desc">Commission-based work for specific tasks</span>
+              </div>
+            </div>
+          </article>
+          <article class="pricing-card pricing-card--large">
+            <h3>How Pricing Works</h3>
+            <p class="pricing-note">
+              Prices vary based on the <strong>complexity</strong> and <strong>difficulty</strong> of the system. Each project is quoted individually after understanding the requirements.
+            </p>
+            <div class="pricing-divider"></div>
+            <h3>Revenue Share</h3>
+            <p class="pricing-note">
+              I do <strong>not</strong> accept percentage-based payments.
+            </p>
+            <p class="pricing-exception">
+              Exception: Only for well-known games that are nearly finished and ready for release.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section__header">
+          <div>
+            <p class="eyebrow">Core stack</p>
+            <h2>Tools I keep razor sharp</h2>
+          </div>
+        </div>
+        <div class="stack-grid">
+          <article>
+            <p class="eyebrow">Game scripting</p>
+            <h3>Luau / Roblox</h3>
+            <p>
+              Robust systems engineering, quick issue resolution, scalable loops, and end-to-end experience delivery.
+            </p>
+            <button class="btn pill" type="button" data-open-works="roblox">
+              View work
+            </button>
+          </article>
+          <article>
+            <p class="eyebrow">Tooling</p>
+            <h3>C++ / C#</h3>
+            <p>
+              ImGui-style apps, custom tooling, and utilities that support the team when
+              the brief gets experimental.
+            </p>
+            <button class="btn pill" type="button">
+              View work
+            </button>
+          </article>
+          <article>
+            <p class="eyebrow">Experiences</p>
+            <h3>JavaScript</h3>
+            <p>
+              Discord bots, sites, and control panels that keep the community looped in.
+            </p>
+            <button class="btn pill disabled" type="button" disabled aria-disabled="true">
+              View work
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section__header">
+          <div>
+            <p class="eyebrow">Roblox contributions</p>
+            <h2>Games where I left a fingerprint</h2>
+          </div>
+        </div>
+        <div id="games-grid" class="games-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© <span id="year"></span> rwque · Creating high-quality interactive experiences.</p>
+    </footer>
+
+    <div class="audio-player" aria-live="polite">
+      <div class="audio-meta">
+        <img class="audio-icon" alt="Track icon" src="https://www.youtube.com/s/desktop/5f8b1f6f/img/favicon_144x144.png" />
+        <div class="audio-text">
+          <p class="audio-title">Loading...</p>
+          <p class="audio-time"><span class="audio-current">0:00</span> / <span class="audio-duration">0:00</span></p>
+        </div>
+      </div>
+      <div class="audio-bars" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+      <div class="audio-controls">
+        <button class="audio-btn prev" aria-label="Previous">
+          <svg viewBox="0 0 24 24"><path d="M6 5v14M20 6l-10 6 10 6V6z" /></svg>
+        </button>
+        <button class="audio-btn play" aria-label="Play/Pause">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7-11-7z" /></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>
+        </button>
+        <button class="audio-btn next" aria-label="Next">
+          <svg viewBox="0 0 24 24"><path d="M18 5v14M4 6l10 6-10 6V6z" /></svg>
+        </button>
+        <label class="audio-volume" aria-label="Volume">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5l-5 4H5z"/><path d="M16 8.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 6a6 6 0 0 1 0 12"/></svg>
+          <input type="range" min="0" max="100" value="70" step="1" data-volume />
+        </label>
+      </div>
+    </div>
+
+    <section class="works-modal" data-works-modal hidden aria-hidden="true">
+      <div class="works-modal__backdrop" data-close-works></div>
+      <div class="works-modal__panel" role="dialog" aria-modal="true" aria-labelledby="works-modal-title">
+        <header class="works-modal__header">
+          <div>
+            <p class="eyebrow">Roblox Showcase</p>
+            <h2 id="works-modal-title">Selected works</h2>
+          </div>
+          <button class="works-modal__close" type="button" data-close-works aria-label="Close works overlay">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </header>
+        <div class="works-modal__controls">
+          <label>
+            <span class="sr-only">Search works</span>
+            <input type="search" placeholder="Search by name or tag" data-works-search />
+          </label>
+        </div>
+        <div class="works-modal__list" data-works-list aria-live="polite">
+          <p class="works-modal__info">Loading works...</p>
+        </div>
+      </div>
+    </section>
+
+    <script src="./script.js" type="module"></script>
+  </body>
+</html>

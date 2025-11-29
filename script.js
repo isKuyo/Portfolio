@@ -827,8 +827,10 @@ function renderWorks(filter = '') {
           <iframe 
             allow="fullscreen" 
             allowfullscreen 
+            width="1280"
+            height="720"
             src="https://streamable.com/e/${streamableId}?loop=0" 
-            style="border:none; width:100%; height:100%; position:absolute; left:0px; top:0px; overflow:hidden;"
+            style="border:none;"
           ></iframe>
         </div>
       `;

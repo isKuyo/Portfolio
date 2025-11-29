@@ -169,38 +169,6 @@ function updateElapsedTime() {
   }
 }
 setInterval(updateElapsedTime, 1000);
-// Fallback data for each game in PLACE_IDS to ensure they're always displayed
-const fallbackGames = [
-  {
-    id: "7991339063",
-    name: "Rainbow Friends",
-    visits: "Visits loading",
-    icon: "https://tr.rbxcdn.com/8f0a1b5918bb74dad8a2c40377972c48/150/150/Image/Png",
-    link: "https://www.roblox.com/games/7991339063/Rainbow-Friends",
-  },
-  {
-    id: "9054723407",
-    name: "Doors",
-    visits: "Visits loading",
-    icon: "https://tr.rbxcdn.com/c8d2b1258d0fe73fdd2f1c7a7c0c6a0a/150/150/Image/Png",
-    link: "https://www.roblox.com/games/9054723407/Doors",
-  },
-  {
-    id: "13689905003",
-    name: "Fuga da Escola",
-    visits: "Visits loading",
-    icon: "https://tr.rbxcdn.com/9a5c93e7d7cd86e35e0a9d0f5ccf707d/150/150/Image/Png",
-    link: "https://www.roblox.com/games/13689905003/Fuga-da-Escola",
-  },
-  {
-    id: "13603968116",
-    name: "Rainbow Friends 2",
-    visits: "Visits loading",
-    icon: "https://tr.rbxcdn.com/e1b9c8d4f8d4e6f1c8d4e6f1c8d4e6f1/150/150/Image/Png",
-    link: "https://www.roblox.com/games/13603968116/Rainbow-Friends-2",
-  },
-];
-
 // Get PLACE_IDS from server.js
 const PLACE_IDS = ["7991339063", "9054723407", "13689905003", "13603968116"];
 
@@ -351,34 +319,12 @@ function loadGamesFromLocalCache() {
     if (!parsed || !Array.isArray(parsed.games)) return null;
     if (Date.now() - Number(parsed.ts || 0) > CLIENT_CACHE_TTL) return null;
     
-    // Create a map of game IDs to their cached data
-    const gameMap = new Map();
-    parsed.games.forEach(g => {
-      const match = g.link?.match(/games\/([0-9]+)/);
-      const id = match ? match[1] : null;
-      if (id) {
-        gameMap.set(id, {
-          id,
-          name: g.name,
-          visits: formatVisits(Number(g.visits || 0)),
-          icon: g.icon ?? "https://via.placeholder.com/150/111/FFFFFF?text=Roblox",
-          link: g.link
-        });
-      }
-    });
-    
-    // Ensure all games in PLACE_IDS are included, using fallbacks if needed
-    const result = [];
-    PLACE_IDS.forEach(id => {
-      if (gameMap.has(id)) {
-        result.push(gameMap.get(id));
-      } else {
-        const fallback = fallbackGames.find(g => g.id === id);
-        if (fallback) result.push(fallback);
-      }
-    });
-    
-    return result;
+    return parsed.games.map(g => ({
+      name: g.name,
+      visits: formatVisits(Number(g.visits || 0)),
+      icon: g.icon ?? "https://via.placeholder.com/150/111/FFFFFF?text=Roblox",
+      link: g.link
+    }));
   } catch { return null; }
 }
 
@@ -408,11 +354,10 @@ const renderGames = async (isRetry = false) => {
       cached.forEach(createCard);
     } else {
       setPlaceholder("Loading experiences...");
-      // Guard: if nothing loaded within 2.5s, show a minimal fallback
+      // Guard: if nothing loaded within 2.5s, show a better loading message
       initialLoadGuard = setTimeout(() => {
         if (!grid.querySelector('.game-card')) {
-          grid.innerHTML = "";
-          fallbackGames.forEach(createCard);
+          setPlaceholder("Still loading experiences... Please wait.");
         }
       }, 2500);
     }
@@ -426,41 +371,20 @@ const renderGames = async (isRetry = false) => {
     // Check if dataset is complete
     const needsRetry = !games.isComplete;
 
-    // Always ensure all games are displayed, even if data is incomplete
+    // Display any valid games we have, even if data is incomplete
     if (needsRetry) {
       if (initialLoadGuard) { clearTimeout(initialLoadGuard); initialLoadGuard = null; }
       
-      // Create a map of game IDs to their data
-      const gameMap = new Map();
-      
-      // First add any valid games from the API response
+      // Filter out games with valid data
       const validNow = games.filter(g => g && g.name && g.name !== 'Unknown');
-      validNow.forEach(game => {
-        // Extract the ID from the link
-        const match = game.link?.match(/games\/([0-9]+)/);
-        const id = match ? match[1] : null;
-        if (id) gameMap.set(id, game);
-      });
       
-      // Fill in missing games with fallback data
-      PLACE_IDS.forEach(id => {
-        if (!gameMap.has(id)) {
-          const fallback = fallbackGames.find(g => g.id === id);
-          if (fallback) gameMap.set(id, fallback);
-        }
-      });
-      
-      // Render all games in the original PLACE_IDS order
-      grid.innerHTML = "";
-      PLACE_IDS.forEach(id => {
-        const game = gameMap.get(id);
-        if (game) createCard(game);
-      });
-      
-      // If somehow we still have no cards, use complete fallback
-      if (!grid.querySelector('.game-card')) {
+      // Only update the display if we have valid games
+      if (validNow.length > 0) {
         grid.innerHTML = "";
-        fallbackGames.forEach(createCard);
+        validNow.forEach(createCard);
+      } else if (!grid.querySelector('.game-card')) {
+        // If nothing is displayed yet, show loading message
+        setPlaceholder("Loading experiences...");
       }
       if (gamesRetryCount < MAX_AUTO_RETRIES) {
         gamesRetryCount++;
@@ -471,34 +395,11 @@ const renderGames = async (isRetry = false) => {
       return;
     }
 
-    // Render complete dataset, ensuring all games in PLACE_IDS are displayed
+    // Render complete dataset
     if (initialLoadGuard) { clearTimeout(initialLoadGuard); initialLoadGuard = null; }
     
-    // Create a map of game IDs to their data
-    const gameMap = new Map();
-    
-    // Add all games from the API response
-    games.forEach(game => {
-      // Extract the ID from the link
-      const match = game.link?.match(/games\/([0-9]+)/);
-      const id = match ? match[1] : null;
-      if (id) gameMap.set(id, game);
-    });
-    
-    // Fill in any missing games with fallback data (shouldn't happen with complete data, but just in case)
-    PLACE_IDS.forEach(id => {
-      if (!gameMap.has(id)) {
-        const fallback = fallbackGames.find(g => g.id === id);
-        if (fallback) gameMap.set(id, fallback);
-      }
-    });
-    
-    // Render all games in the original PLACE_IDS order
     grid.innerHTML = "";
-    PLACE_IDS.forEach(id => {
-      const game = gameMap.get(id);
-      if (game) createCard(game);
-    });
+    games.forEach(createCard);
 
     // Save fresh data for instant loads next time
     if (games.isComplete) {
@@ -521,17 +422,12 @@ const renderGames = async (isRetry = false) => {
     }
   } catch (error) {
     console.error(error);
-    // Always ensure all games are displayed, even on API errors
+    // Clear loading guard if it exists
     if (initialLoadGuard) { clearTimeout(initialLoadGuard); initialLoadGuard = null; }
     
-    // If we already have cards displayed, keep them
+    // If nothing is displayed yet, show error message
     if (!grid.querySelector('.game-card')) {
-      grid.innerHTML = "";
-      // Display all fallback games in the correct order
-      PLACE_IDS.forEach(id => {
-        const fallback = fallbackGames.find(g => g.id === id);
-        if (fallback) createCard(fallback);
-      });
+      setPlaceholder("Could not load experiences. Retrying...");
     }
     
     // Retry silently

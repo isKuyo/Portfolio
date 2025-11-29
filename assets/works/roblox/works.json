@@ -3,20 +3,17 @@
     {
       "name": "Color Picker",
       "tags": ["UI", "UX", "Systems"],
-      "video": "https://streamable.com/ebj1bo",
-      "streamable_id": "ebj1bo"
+      "video": "https://cdn.discordapp.com/attachments/1411726550662906050/1444367375972565143/colorpickervideo.mp4?ex=692c7371&is=692b21f1&hm=9ebe97bc8beb1758a647f52c50bec25afb18107c9a657d4e9512408e7eaca287&"
     },
     {
       "name": "Minimap",
       "tags": ["UI", "Systems"],
-      "video": "https://streamable.com/ex4tjh",
-      "streamable_id": "ex4tjh"
+      "video": "https://cdn.discordapp.com/attachments/1411726550662906050/1444367643057324142/minimapvideo.mp4?ex=692c73b1&is=692b2231&hm=a2f6174dc5ac9c5e59dc1805cae7529733363f1aa399413c3f870beaf1894d3a&"
     },
     {
       "name": "Grab",
       "tags": ["Systems", "Mechanics"],
-      "video": "https://streamable.com/3isy2m",
-      "streamable_id": "3isy2m"
+      "video": "https://cdn.discordapp.com/attachments/1411726550662906050/1444367682035126333/grabvideo.mp4?ex=692c73ba&is=692b223a&hm=c7c3ae982d9c36ea0560968bea112781d6e5eb2178fce3ac77fb3113c25c4e77&"
     }
   ],
   "all_tags": ["UI", "UX", "UI Design", "Scripting", "Systems", "Mechanics", "Fullstack", "Backend", "Frontend", "Skills"]

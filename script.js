@@ -138,7 +138,7 @@ const countdownInterval = setInterval(() => {
     clearInterval(countdownInterval);
     if (proceedBtn) {
       proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Prosseguir';
+      proceedBtn.textContent = 'Proceed';
     }
   }
 }, 1000);

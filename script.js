@@ -949,6 +949,26 @@ function initVideoControls() {
       }
     });
 
+    // Volume controls
+    const volumeBtn = media.querySelector('.video-volume');
+    const volumeSlider = media.querySelector('.volume-slider');
+    
+    const updateMuteState = () => {
+      media.classList.toggle('muted', video.muted || video.volume === 0);
+    };
+    
+    volumeBtn?.addEventListener('click', () => {
+      video.muted = !video.muted;
+      updateMuteState();
+      if (volumeSlider) volumeSlider.value = video.muted ? 0 : video.volume * 100;
+    });
+    
+    volumeSlider?.addEventListener('input', () => {
+      video.volume = volumeSlider.value / 100;
+      video.muted = video.volume === 0;
+      updateMuteState();
+    });
+
     const onFsChange = () => {
       const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
       media.classList.toggle('is-fullscreen', fsEl === media);

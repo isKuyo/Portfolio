@@ -190,7 +190,8 @@ h1 {
   min-width: 280px;
 }
 
-.discord-presence.offline-only {
+.discord-presence.offline-only,
+.discord-presence.online-only {
   min-width: 120px;
   justify-content: center;
   align-self: center;
@@ -337,6 +338,12 @@ h1 {
 .offline-message {
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.online-message {
+  font-size: 0.85rem;
+  color: #53F09D;
   font-weight: 500;
 }
 

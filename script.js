@@ -825,14 +825,16 @@ function renderWorks(filter = '') {
       // Usar iframe do Streamable com parâmetros específicos para remover UI
       videoContent = `
         <div class="streamable-wrapper">
-          <iframe 
-            src="https://streamable.com/e/${streamableId}?autoplay=0&muted=0&ui=0&controls=0&hd=1" 
-            frameborder="0" 
-            allowfullscreen
-            allow="autoplay; fullscreen"
-          ></iframe>
-          <div class="side-overlay-left"></div>
-          <div class="side-overlay-right"></div>
+          <div class="streamable-inner">
+            <iframe 
+              src="https://streamable.com/e/${streamableId}?nocontrols=1&muted=1&ui=0&hd=1" 
+              frameborder="0" 
+              allowfullscreen
+              allow="autoplay; fullscreen"
+              style="width: 110%; height: 110%; position: absolute; left: -5%; top: -5%; overflow: hidden; border: none;"
+            ></iframe>
+          </div>
+          <div class="video-overlay"></div>
         </div>
       `;
     } else if (work.video) {

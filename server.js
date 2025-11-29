@@ -254,6 +254,22 @@ app.get("/api/games", async (req, res) => {
       console.error("Erro ao buscar ícones dos jogos:", err.message);
     }
 
+    // 3b) Fallback: place details by placeId for name/visits
+    let placeDetailsMap = new Map();
+    try {
+      const pdRes = await fetchWithTimeout(
+        `https://games.roproxy.com/v1/games/multiget-place-details?${placeQuery}`,
+        {}, 4000
+      );
+      if (pdRes.ok) {
+        const pdJson = await pdRes.json();
+        const list = Array.isArray(pdJson) ? pdJson : (Array.isArray(pdJson?.data) ? pdJson.data : []);
+        list.forEach((pd) => { if (pd && pd.placeId != null) placeDetailsMap.set(String(pd.placeId), pd); });
+      }
+    } catch (err) {
+      console.error("Erro ao buscar place details:", err.message);
+    }
+
     let detailsMap = new Map();
     if (detailsRes.ok) {
       try {
@@ -271,17 +287,19 @@ app.get("/api/games", async (req, res) => {
       const uni = universes.find((u) => String(u.placeId) === String(placeId));
       const icon = iconMap.get(String(placeId)) ?? null;
       const d = uni?.universeId ? detailsMap.get(String(uni.universeId)) : null;
+      const pd = placeDetailsMap.get(String(placeId));
       return {
-        name: d?.name ?? "Desconhecido",
-        visits: d?.visits ?? 0,
+        name: d?.name ?? pd?.name ?? "Unknown",
+        visits: (typeof d?.visits === 'number' ? d.visits : (typeof pd?.placeVisits === 'number' ? pd.placeVisits : 0)),
         icon,
         link: `https://www.roblox.com/games/${placeId}`,
       };
     });
 
     // Atualizar cache apenas se tivermos dados válidos
-    const hasValidData = games.some(g => g.name !== "Desconhecido" && g.visits > 0);
-    const allValid = games.every(g => g.name !== "Desconhecido" && g.visits > 0);
+    const isValid = (g) => Boolean(g.name && g.name !== "Unknown") && Number(g.visits || 0) >= 0;
+    const hasValidData = games.some(isValid);
+    const allValid = games.every(isValid);
     if (hasValidData) {
       gamesCache = games;
       cacheTimestamp = Date.now();

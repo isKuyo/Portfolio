@@ -1,6 +1,24 @@
 /* Accent text utility */
 .text-accent { color: var(--accent); }
 
+/* Games refresh button */
+.games-refresh-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  transition: transform 0.2s ease;
+}
+
+.games-refresh-btn:hover {
+  transform: scale(1.05);
+}
+
+.games-refresh-btn:active {
+  transform: scale(0.95);
+}
+
 @keyframes visitShine {
   0% { background-position: 0 0, 120% 0; }
   65% { background-position: 0 0, -220% 0; }

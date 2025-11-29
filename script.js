@@ -825,13 +825,15 @@ function renderWorks(filter = '') {
       
       videoContent = `
         <div class="video-wrapper streamable-container">
-          <iframe
-            src="https://streamable.com/e/${streamableId}?loop=0&autoplay=0&hd=1"
-            frameborder="0"
-            allowfullscreen
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-            allow="autoplay; fullscreen"
-          ></iframe>
+          <div style="width: 100%; height: 0px; position: relative; padding-bottom: 56.25%;">
+            <iframe src="https://streamable.com/o/${streamableId}" 
+              frameborder="0" 
+              width="100%" 
+              height="100%" 
+              allowfullscreen 
+              style="width: 100%; height: 100%; position: absolute; left: 0px; top: 0px; overflow: hidden;">
+            </iframe>
+          </div>
         </div>
       `;
     } else if (work.video) {

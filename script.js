@@ -261,16 +261,25 @@ const createCard = ({ name, visits, icon, link }) => {
   grid.appendChild(card);
 };
 
-const fetchGameData = async () => {
-  const response = await fetch("/api/games");
+const fetchGameData = async (forceRefresh = false) => {
+  const url = forceRefresh ? "/api/games?refresh=true" : "/api/games";
+  const response = await fetch(url);
   if (!response.ok) throw new Error("Proxy offline");
-  const { games } = await response.json();
-  return games.map((details) => ({
+  const data = await response.json();
+  
+  // Verificar se os dados vieram do cache
+  const fromCache = data.fromCache === true;
+  
+  // Mapear os jogos para o formato esperado
+  const games = data.games.map((details) => ({
     name: details.name,
     visits: formatVisits(details.visits),
     icon: details.icon ?? "https://via.placeholder.com/150/111/FFFFFF?text=Roblox",
     link: details.link,
+    fromCache
   }));
+  
+  return games;
 };
 
 // Variáveis para controle de retry
@@ -305,13 +314,22 @@ const renderGames = async (isRetry = false, isManualRefresh = false) => {
 
   try {
     lastGamesLoadAttempt = Date.now();
-    const games = await fetchGameData();
+    // Forçar refresh quando for uma atualização manual
+    const games = await fetchGameData(isManualRefresh);
     
     // Verificar se todos os jogos têm nomes válidos
     const hasUnknownGames = games.some(game => game.name === "Desconhecido");
     
     grid.innerHTML = "";
     games.forEach(createCard);
+    
+    // Adicionar indicador se os dados vieram do cache
+    if (games.length > 0 && games[0].fromCache) {
+      const cacheNote = document.createElement("p");
+      cacheNote.className = "placeholder games-section-note";
+      cacheNote.textContent = "Dados carregados do cache. Clique em 'Atualizar dados' para buscar dados atualizados.";
+      grid.parentElement?.appendChild(cacheNote);
+    }
     
     // Resetar contador de tentativas após sucesso
     gamesRetryCount = 0;
@@ -326,6 +344,9 @@ const renderGames = async (isRetry = false, isManualRefresh = false) => {
         const delay = 3000 + (gamesRetryCount * 2000); // Aumenta o tempo entre tentativas
         gamesRetryTimeout = setTimeout(() => renderGames(true), delay);
       }
+    } else if (games.length > 0 && games[0].fromCache) {
+      // Adicionar botão de atualização mesmo se não houver jogos desconhecidos, mas os dados vieram do cache
+      addRefreshButton();
     }
   } catch (error) {
     console.error(error);

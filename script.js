@@ -104,11 +104,14 @@ async function fetchDiscordPresence() {
           `;
         } else {
           currentActivityStartTime = null;
-          // No activity - show offline message if offline, otherwise show Online
+          // No activity - show status message based on discord_status
           if (discord_status === 'offline') {
             activityEl.innerHTML = '<span class="offline-message">Offline</span>';
           } else {
-            activityEl.innerHTML = '<span class="online-message">Online</span>';
+            // Usar a classe correspondente ao status
+            const statusClass = `status-${discord_status}`;
+            const statusText = discord_status.charAt(0).toUpperCase() + discord_status.slice(1); // Capitalizar
+            activityEl.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
           }
         }
       }

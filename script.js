@@ -831,7 +831,7 @@ function renderWorks(filter = '') {
               frameborder="0" 
               allowfullscreen
               allow="autoplay; fullscreen"
-              style="width: 110%; height: 110%; position: absolute; left: -5%; top: -5%; overflow: hidden; border: none;"
+              style="width: 130%; height: 130%; position: absolute; left: -15%; top: -15%; overflow: hidden; border: none;"
             ></iframe>
           </div>
           <div class="video-overlay"></div>

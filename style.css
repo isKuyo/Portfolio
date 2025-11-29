@@ -659,7 +659,7 @@ p {
 
 .video-wrapper {
   position: relative;
-  width: 100%;
+  width: calc(100% - 2px);
   padding-bottom: 39.19%;
   overflow: hidden;
   background: #000;

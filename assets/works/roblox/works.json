@@ -19,6 +19,11 @@
       "name": "Simple Daily Reward",
       "tags": ["Systems", "UI"],
       "video": "https://streamable.com/ovkmn5"
+    },
+    {
+      "name": "The Forge Minigame",
+      "tags": ["Systems", "UI", "Scripting", "Mechanics"],
+      "video": "https://streamable.com/xor2vr"
     }
   ],
   "all_tags": ["UI", "UX", "UI Design", "Scripting", "Systems", "Mechanics", "Fullstack", "Backend", "Frontend", "Skills"]

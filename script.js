@@ -1096,14 +1096,40 @@ async function fetchWorks(kind) {
   return worksCache;
 }
 
-function renderWorks(filter = '') {
+// Cache para links MP4 do Streamable já resolvidos
+const streamableMp4Cache = new Map();
+
+// Função para extrair MP4 do Streamable via API
+async function resolveStreamableUrl(url) {
+  if (streamableMp4Cache.has(url)) {
+    return streamableMp4Cache.get(url);
+  }
+  try {
+    const res = await fetch(`/api/streamable?url=${encodeURIComponent(url)}`);
+    if (!res.ok) throw new Error('Streamable API failed');
+    const data = await res.json();
+    if (data.mp4) {
+      streamableMp4Cache.set(url, data.mp4);
+      return data.mp4;
+    }
+  } catch (err) {
+    console.error('Streamable resolve error:', err);
+  }
+  return null;
+}
+
+// Verifica se é um link do Streamable
+function isStreamableUrl(url) {
+  return /streamable\.com\/[a-zA-Z0-9]+/i.test(url);
+}
+
+async function renderWorks(filter = '') {
   if (!worksList) return;
   const term = filter.toLowerCase();
   if (!worksCache.length) {
     worksList.innerHTML = '<p class="works-modal__info">No works found yet.</p>';
     return;
   }
-  const fragment = document.createDocumentFragment();
   const filtered = worksCache.filter((work) => {
     const tags = work.tags || [];
     if (!term) return true;
@@ -1114,18 +1140,35 @@ function renderWorks(filter = '') {
     worksList.innerHTML = '<p class="works-modal__info">No works match your search.</p>';
     return;
   }
-  filtered.forEach((work) => {
+  
+  // Mostrar loading enquanto resolve os links do Streamable
+  worksList.innerHTML = '<p class="works-modal__info">Loading videos...</p>';
+  
+  // Resolver todos os links do Streamable em paralelo
+  const resolvedWorks = await Promise.all(filtered.map(async (work) => {
+    let videoUrl = work.video;
+    if (videoUrl && isStreamableUrl(videoUrl)) {
+      const mp4Url = await resolveStreamableUrl(videoUrl);
+      if (mp4Url) {
+        videoUrl = mp4Url;
+      }
+    }
+    return { ...work, resolvedVideo: videoUrl };
+  }));
+  
+  const fragment = document.createDocumentFragment();
+  resolvedWorks.forEach((work) => {
     const tags = work.tags || [];
     const card = document.createElement('article');
     card.className = 'works-card';
     
     // Processar URL do vídeo
     let videoContent = '';
-    if (work.video) {
+    if (work.resolvedVideo) {
       // Usar vídeo nativo com player customizado
       videoContent = `
         <div class="video-wrapper">
-          <video src="${work.video}" preload="metadata" playsinline></video>
+          <video src="${work.resolvedVideo}" preload="metadata" playsinline crossorigin="anonymous"></video>
           <div class="video-controls">
             <button class="video-btn video-playpause" aria-label="Play/Pause">
               <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>

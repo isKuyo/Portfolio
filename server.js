@@ -63,76 +63,66 @@ app.get("/api/songs", (_req, res) => {
   }
 });
 
-// Streamable MP4 extractor - extrai link direto do vídeo via meta tags og:video
+// Streamable MP4 extractor - usa a API oficial do Streamable
 app.get("/api/streamable", async (req, res) => {
   const url = req.query.url;
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ error: 'URL do Streamable é obrigatória' });
   }
 
-  // Validar formato do URL do Streamable
+  // Extrair shortcode do URL do Streamable
   const streamableMatch = url.match(/streamable\.com\/([a-zA-Z0-9]+)/);
   if (!streamableMatch) {
     return res.status(400).json({ error: 'URL inválida do Streamable' });
   }
 
-  const videoId = streamableMatch[1];
-  const streamableUrl = `https://streamable.com/${videoId}`;
+  const shortcode = streamableMatch[1];
 
   try {
-    const response = await fetchWithTimeout(streamableUrl, {
+    // Usar a API oficial do Streamable
+    const apiUrl = `https://api.streamable.com/videos/${shortcode}`;
+    const response = await fetchWithTimeout(apiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     }, 10000);
 
     if (!response.ok) {
-      throw new Error(`Streamable retornou status ${response.status}`);
+      throw new Error(`Streamable API retornou status ${response.status}`);
     }
 
-    const html = await response.text();
+    const data = await response.json();
 
-    // Extrair URL do vídeo das meta tags og:video
-    const ogVideoMatch = html.match(/<meta\s+property=["']og:video["']\s+content=["']([^"']+)["']/i)
-      || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:video["']/i);
-    
-    if (ogVideoMatch && ogVideoMatch[1]) {
-      return res.json({ 
-        mp4: ogVideoMatch[1],
-        id: videoId,
-        source: streamableUrl
-      });
+    // Extrair URL do MP4 dos files
+    let mp4Url = null;
+    if (data.files) {
+      // Preferir mp4 de alta qualidade, depois mp4-mobile
+      if (data.files.mp4 && data.files.mp4.url) {
+        mp4Url = data.files.mp4.url;
+      } else if (data.files['mp4-mobile'] && data.files['mp4-mobile'].url) {
+        mp4Url = data.files['mp4-mobile'].url;
+      }
     }
 
-    // Fallback: tentar extrair do og:video:url
-    const ogVideoUrlMatch = html.match(/<meta\s+property=["']og:video:url["']\s+content=["']([^"']+)["']/i)
-      || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:video:url["']/i);
-    
-    if (ogVideoUrlMatch && ogVideoUrlMatch[1]) {
-      return res.json({ 
-        mp4: ogVideoUrlMatch[1],
-        id: videoId,
-        source: streamableUrl
-      });
+    if (!mp4Url) {
+      return res.status(404).json({ error: 'Não foi possível encontrar o link do vídeo' });
     }
 
-    // Fallback: tentar extrair do og:video:secure_url
-    const ogSecureMatch = html.match(/<meta\s+property=["']og:video:secure_url["']\s+content=["']([^"']+)["']/i)
-      || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:video:secure_url["']/i);
-    
-    if (ogSecureMatch && ogSecureMatch[1]) {
-      return res.json({ 
-        mp4: ogSecureMatch[1],
-        id: videoId,
-        source: streamableUrl
-      });
+    // Garantir que o URL tenha protocolo
+    if (mp4Url.startsWith('//')) {
+      mp4Url = 'https:' + mp4Url;
     }
 
-    return res.status(404).json({ error: 'Não foi possível extrair o link do vídeo' });
+    return res.json({ 
+      mp4: mp4Url,
+      id: shortcode,
+      title: data.title || null,
+      thumbnail: data.thumbnail_url ? (data.thumbnail_url.startsWith('//') ? 'https:' + data.thumbnail_url : data.thumbnail_url) : null,
+      source: `https://streamable.com/${shortcode}`
+    });
   } catch (error) {
-    console.error('Streamable extraction error:', error.message);
+    console.error('Streamable API error:', error.message);
     return res.status(500).json({ error: 'Erro ao extrair vídeo do Streamable' });
   }
 });

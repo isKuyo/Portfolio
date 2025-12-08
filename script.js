@@ -1,5 +1,87 @@
 const grid = document.querySelector("#games-grid");
 
+// ========================================
+// Terminal Typing Effect
+// ========================================
+const typedTextEl = document.getElementById('typed-text');
+const textToType = 'about --developer';
+let charIndex = 0;
+
+function typeText() {
+  if (!typedTextEl) return;
+  if (charIndex < textToType.length) {
+    typedTextEl.textContent += textToType.charAt(charIndex);
+    charIndex++;
+    setTimeout(typeText, 80 + Math.random() * 40);
+  }
+}
+
+// Start typing after a short delay
+setTimeout(typeText, 500);
+
+// ========================================
+// Copy Discord Button with new design
+// ========================================
+const copyBtn = document.querySelector('[data-copy]');
+if (copyBtn) {
+  copyBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const textToCopy = 'rwque';
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        // Fallback for older browsers or non-HTTPS
+        const textArea = document.createElement('textarea');
+        textArea.value = textToCopy;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      
+      // Show copied state
+      this.classList.add('copied');
+      setTimeout(() => {
+        this.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      // Still show feedback even if copy failed
+      this.classList.add('copied');
+      setTimeout(() => {
+        this.classList.remove('copied');
+      }, 2000);
+    }
+  });
+}
+
+// ========================================
+// Update Nav Status
+// ========================================
+function updateNavStatus(status, text) {
+  const navStatus = document.getElementById('nav-status');
+  if (navStatus) {
+    navStatus.setAttribute('data-status', status);
+    const statusText = navStatus.querySelector('.status-text');
+    if (statusText) {
+      statusText.textContent = text;
+    }
+  }
+}
+
+// ========================================
+// Year in Footer
+// ========================================
+const yearEl = document.getElementById('year');
+if (yearEl) {
+  yearEl.textContent = new Date().getFullYear();
+}
+
 // Fetch Discord presence via Lanyard API
 const DISCORD_USER_ID = '1088946006663630969';
 async function fetchDiscordPresence() {
@@ -20,6 +102,15 @@ async function fetchDiscordPresence() {
       // Set status indicator
       const presenceEl = document.getElementById('discord-presence');
       if (presenceEl) presenceEl.setAttribute('data-status', discord_status || 'offline');
+      
+      // Update nav status
+      const statusLabels = {
+        online: 'Online',
+        idle: 'Away',
+        dnd: 'Busy',
+        offline: 'Offline'
+      };
+      updateNavStatus(discord_status || 'offline', statusLabels[discord_status] || 'Offline');
       
       // Set activity
       const activityEl = document.getElementById('discord-activity');
@@ -124,37 +215,11 @@ async function fetchDiscordPresence() {
   }
 }
 fetchDiscordPresence();
-// Disclaimer Modal
-const disclaimerModal = document.getElementById('disclaimerModal');
-const proceedBtn = document.getElementById('proceedBtn');
-const countdownEl = document.getElementById('countdown');
 
-let countdown = 5;
-const countdownInterval = setInterval(() => {
-  countdown--;
-  if (countdownEl) countdownEl.textContent = countdown;
-  
-  if (countdown <= 0) {
-    clearInterval(countdownInterval);
-    if (proceedBtn) {
-      proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Proceed';
-    }
-  }
-}, 1000);
+// Copy Discord button handler moved to top of file
 
-proceedBtn?.addEventListener('click', () => {
-  if (disclaimerModal) {
-    disclaimerModal.style.opacity = '0';
-    setTimeout(() => {
-      disclaimerModal.style.display = 'none';
-    }, 500);
-  }
-});
-
-// Fetch Discord presence on load
-fetchDiscordPresence();
-setInterval(fetchDiscordPresence, 30000); // Update every 30 seconds time every second
+// Update Discord presence periodically
+setInterval(fetchDiscordPresence, 30000);
 let currentActivityStartTime = null;
 function updateElapsedTime() {
   if (!currentActivityStartTime) return;
@@ -162,9 +227,15 @@ function updateElapsedTime() {
   const elapsedEl = document.querySelector('.activity-elapsed');
   if (elapsedEl) {
     const elapsed = Date.now() - currentActivityStartTime;
-    const mins = Math.floor(elapsed / 60000);
+    const hours = Math.floor(elapsed / 3600000);
+    const mins = Math.floor((elapsed % 3600000) / 60000);
     const secs = Math.floor((elapsed % 60000) / 1000);
-    const elapsedStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} elapsed`;
+    let elapsedStr;
+    if (hours > 0) {
+      elapsedStr = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} elapsed`;
+    } else {
+      elapsedStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} elapsed`;
+    }
     elapsedEl.textContent = elapsedStr;
   }
 }
@@ -624,8 +695,12 @@ let worksLoadedType = null;
 
 const formatTime = (sec = 0) => {
   sec = Math.max(0, Math.floor(sec));
-  const m = Math.floor(sec / 60);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
@@ -716,8 +791,14 @@ const setSource = async (index, startAt = 0, autoplay = true) => {
     }
   });
   audio.addEventListener('canplay', () => { try { ensureAudioContextActive(); } catch {} });
-  audio.addEventListener('play', () => { btnPlay?.classList.add('playing'); startVizLoop(); });
-  audio.addEventListener('pause', () => { btnPlay?.classList.remove('playing'); stopVizLoop(); });
+  audio.addEventListener('play', () => { 
+    document.querySelector('.audio-player')?.classList.add('playing'); 
+    startVizLoop(); 
+  });
+  audio.addEventListener('pause', () => { 
+    document.querySelector('.audio-player')?.classList.remove('playing'); 
+    stopVizLoop(); 
+  });
   audio.addEventListener('ended', () => {
     setSource(trackIndex + 1, 0, true);
   });
@@ -763,10 +844,15 @@ const setSource = async (index, startAt = 0, autoplay = true) => {
 
 btnPlay?.addEventListener('click', () => {
   if (!audio) return;
+  const player = document.querySelector('.audio-player');
   if (audio.paused) {
-    audio.play().then(() => { btnPlay.classList.add('playing'); startVizLoop(); }).catch(() => {});
+    audio.play().then(() => { 
+      player?.classList.add('playing'); 
+      startVizLoop(); 
+    }).catch(() => {});
   } else {
     audio.pause();
+    player?.classList.remove('playing');
     stopVizLoop();
   }
 });
@@ -986,16 +1072,7 @@ setPlayerVolume(userVolume);
   setSource(0, 0, true);
 })();
 
-const copyBtn = document.querySelector("[data-copy]");
-copyBtn?.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText("rwque.");
-    copyBtn.classList.add("copied");
-    setTimeout(() => copyBtn.classList.remove("copied"), 3000);
-  } catch (err) {
-    console.error("Clipboard error", err);
-  }
-});
+// Copy button handler is defined at the top of the file
 
 const root = document.documentElement;
 const gridHighlight = document.querySelector('.grid-highlight');

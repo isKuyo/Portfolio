@@ -32,6 +32,10 @@
       "dest": "/api/songs.js"
     },
     {
+      "src": "/api/streamable",
+      "dest": "/api/streamable.js"
+    },
+    {
       "src": "/api/works/roblox",
       "dest": "/api/works/roblox.js"
     },

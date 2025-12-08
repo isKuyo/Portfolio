@@ -366,18 +366,27 @@
     <!-- Works Modal -->
     <section class="works-modal" data-works-modal hidden aria-hidden="true">
       <div class="works-modal__backdrop" data-close-works></div>
-      <div class="works-modal__panel" role="dialog" aria-modal="true" aria-labelledby="works-modal-title">
-        <header class="works-modal__header">
-          <h2 id="works-modal-title">My Work</h2>
-          <button class="works-modal__close" type="button" data-close-works aria-label="Close">
-            <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
+      <div class="works-modal__window" role="dialog" aria-modal="true" aria-labelledby="works-modal-title">
+        <!-- Browser-like header -->
+        <header class="works-modal__browser-header">
+          <div class="browser-dots">
+            <span class="dot dot-red" data-close-works></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+                    <div class="browser-url">
+            <svg class="url-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            <span id="works-modal-title">rwque.works</span>
+          </div>
+          <div class="browser-actions">
+            <input type="search" class="browser-search" placeholder="Search works..." data-works-search />
+          </div>
         </header>
-        <div class="works-modal__controls">
-          <input type="search" placeholder="Search..." data-works-search />
-        </div>
-        <div class="works-modal__list" data-works-list aria-live="polite">
-          <p class="works-modal__info">Loading works...</p>
+        <!-- Content area -->
+        <div class="works-modal__content">
+          <div class="works-modal__list" data-works-list aria-live="polite">
+            <p class="works-modal__info">Loading works...</p>
+          </div>
         </div>
       </div>
     </section>
